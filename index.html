@@ -65,6 +65,9 @@
     @keyframes testimonialSlideRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes testimonialSlideLeft  { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
+    @keyframes cardEnter { from { transform: scale(0.91) translateY(14px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes cardLeaveR { from { transform: translateX(0) rotate(0deg); opacity: 1; } to { transform: translateX(115%) rotate(16deg); opacity: 0; } }
+    @keyframes cardLeaveL { from { transform: translateX(0) rotate(0deg); opacity: 1; } to { transform: translateX(-115%) rotate(-16deg); opacity: 0; } }
 
     #tweaks-panel {
       position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--bg);
@@ -168,8 +171,105 @@ function Counter({ to, suffix = '' }) {
   return <span ref={ref}>{v}{suffix}</span>;
 }
 
+// ── Sidebar Card Deck ────────────────────────────────────────────────────
+function SidebarCardFace({ item }) {
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+      <div style={{ height:68, overflow:'hidden', background:'var(--bg3)', flexShrink:0 }}>
+        <img src={item.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+      </div>
+      <div style={{ padding:'9px 11px' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--accent)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>
+          {item.companies?.slice(0,2).join(' · ')}
+        </div>
+        <div style={{ fontSize:12.5, fontWeight:500, color:'var(--ink)', lineHeight:1.25 }}>{item.title}</div>
+        <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, lineHeight:1.4 }}>{item.desc?.slice(0,52)}…</div>
+      </div>
+    </div>
+  );
+}
+
+function WorkCardDeck({ onOpenWork }) {
+  const [active, setActive] = useState(0);
+  const [leaving, setLeaving] = useState(null);
+  const [dir, setDir] = useState(1);
+  const [animated, setAnimated] = useState(false);
+  const total = WORK.length;
+
+  const go = (d) => {
+    if (leaving !== null) return;
+    setAnimated(true);
+    setDir(d);
+    setLeaving(active);
+    setActive((active + d + total) % total);
+    setTimeout(() => setLeaving(null), 440);
+  };
+
+  const behindRots = [2.8, -4.5, 6.2];
+  const behindScales = [0.97, 0.94, 0.90];
+
+  return (
+    <div style={{ margin:'16px 8px 12px' }}>
+      {/* Stack */}
+      <div style={{ position:'relative', height:148, marginBottom:12 }}>
+        {/* Behind ghost cards */}
+        {[2,1,0].map(i => (
+          <div key={i} style={{
+            position:'absolute', inset:0,
+            background:'var(--bg2)',
+            border:'1px solid var(--border)',
+            borderRadius:13,
+            zIndex:i+1,
+            transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
+            transformOrigin:'center center',
+          }} />
+        ))}
+
+        {/* Leaving card */}
+        {leaving !== null && (
+          <div style={{
+            position:'absolute', inset:0, zIndex:5,
+            border:'1px solid var(--border)', borderRadius:13,
+            background:'var(--bg)', overflow:'hidden',
+            pointerEvents:'none',
+            animation:`${dir>0?'cardLeaveR':'cardLeaveL'} 0.42s cubic-bezier(0.4,0,1,1) forwards`,
+          }}>
+            <SidebarCardFace item={WORK[leaving]} />
+          </div>
+        )}
+
+        {/* Front / active card */}
+        <div key={`card-${active}`} style={{
+          position:'absolute', inset:0, zIndex:4,
+          border:'1px solid var(--border)', borderRadius:13,
+          background:'var(--bg)', overflow:'hidden',
+          cursor:'pointer',
+          animation: animated ? 'cardEnter 0.42s cubic-bezier(0.22,1,0.36,1) forwards' : 'none',
+        }} onClick={() => onOpenWork(WORK[active])}>
+          <SidebarCardFace item={WORK[active]} />
+        </div>
+      </div>
+
+      {/* Counter + arrows */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px' }}>
+        <button onClick={() => go(-1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
+          onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
+        >←</button>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>
+          {String(active+1).padStart(2,'0')} / {String(total).padStart(2,'0')}
+        </span>
+        <button onClick={() => go(1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
+          onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
+        >→</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Sidebar ──────────────────────────────────────────────────────────────
-function Sidebar({ activePage, onNavigate }) {
+function Sidebar({ activePage, onNavigate, onOpenWork }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = [
     { label: 'Home',       page: 'home' },
@@ -223,7 +323,8 @@ function Sidebar({ activePage, onNavigate }) {
             );
           })}
         </nav>
-        <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
+        <WorkCardDeck onOpenWork={onOpenWork} />
+        <div style={{ marginTop:8, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
           <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
           <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
           <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
@@ -1465,7 +1566,7 @@ function App() {
 
   return (
     <>
-      <Sidebar activePage={activePage} onNavigate={navigate} />
+      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} />
       <div className="sidebar-layout" style={{ marginLeft:240, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
         <div style={{ padding:'0 40px', flex:1 }}>
 
