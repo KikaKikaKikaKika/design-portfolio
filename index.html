@@ -228,7 +228,7 @@ function WorkCardDeck({ onOpenWork }) {
             <div key={i} style={{
               position:'absolute', inset:0,
               border:'1px solid var(--border)',
-              borderRadius:13,
+              borderRadius:20,
               zIndex:i+1,
               transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
               transformOrigin:'center center',
@@ -249,7 +249,7 @@ function WorkCardDeck({ onOpenWork }) {
         {leaving !== null && (
           <div style={{
             position:'absolute', inset:0, zIndex:5,
-            border:'1px solid var(--border)', borderRadius:13,
+            border:'1px solid var(--border)', borderRadius:20,
             background:'var(--bg)', overflow:'hidden',
             pointerEvents:'none',
             animation:`${dir>0?'cardLeaveR':'cardLeaveL'} 0.42s cubic-bezier(0.4,0,1,1) forwards`,
@@ -261,7 +261,7 @@ function WorkCardDeck({ onOpenWork }) {
         {/* Front / active card */}
         <div key={`card-${active}`} style={{
           position:'absolute', inset:0, zIndex:4,
-          border:'1px solid var(--border)', borderRadius:13,
+          border:'1px solid var(--border)', borderRadius:20,
           background:'var(--bg)', overflow:'hidden',
           cursor:'pointer',
           animation: animated ? 'cardEnter 0.42s cubic-bezier(0.22,1,0.36,1) forwards' : 'none',
