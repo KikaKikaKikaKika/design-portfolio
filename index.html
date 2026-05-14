@@ -169,11 +169,12 @@ function Counter({ to, suffix = '' }) {
 function Sidebar({ activePage, onNavigate }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = [
-    { label: 'Home',    page: 'home' },
-    { label: 'About',   page: 'about' },
-    { label: 'Work',    page: 'work' },
-    { label: 'Writing', page: 'writing' },
-    { label: 'Contact', page: 'contact' },
+    { label: 'Home',       page: 'home' },
+    { label: 'About',      page: 'about' },
+    { label: 'Work',       page: 'work' },
+    { label: 'Experience', page: 'experience' },
+    { label: 'Writing',    page: 'writing' },
+    { label: 'Contact',    page: 'contact' },
   ];
   const go = (page) => { onNavigate(page); setMobileOpen(false); };
   return (
@@ -865,20 +866,17 @@ function ScrollToTop() {
 // ── Footer ───────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <>
-      <Marquee />
-      <footer style={{ padding:'32px 0 48px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
-        <div style={{ display:'flex', gap:24 }}>
-          {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
-            <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
-              onMouseEnter={e=>e.target.style.color='var(--ink)'}
-              onMouseLeave={e=>e.target.style.color='var(--ink3)'}
-            >{l}</a>
-          ))}
-        </div>
-      </footer>
-    </>
+    <footer style={{ borderTop:'1px solid var(--border)', padding:'28px 40px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
+      <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
+      <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+        {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
+          <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
+            onMouseEnter={e=>e.target.style.color='var(--ink)'}
+            onMouseLeave={e=>e.target.style.color='var(--ink3)'}
+          >{l}</a>
+        ))}
+      </div>
+    </footer>
   );
 }
 
@@ -939,20 +937,6 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
           </div>
         ))}
       </div>
-
-      {/* Featured work — first 3 */}
-      <section style={{ paddingBottom:96 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:40 }}>
-          <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Featured Work</div>
-          <button onClick={() => onNavigate('work')} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', background:'none', border:'none', cursor:'pointer', padding:0, transition:'opacity .2s' }}
-            onMouseEnter={e=>e.currentTarget.style.opacity='.65'}
-            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-          >View all →</button>
-        </div>
-        <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
-          {WORK.slice(0, 3).map((item,i) => <WorkCard key={i} item={item} onOpen={onOpenWork} />)}
-        </div>
-      </section>
 
       {/* Marquee */}
       <Marquee />
@@ -1064,32 +1048,52 @@ function WorkPage({ tweaks, onOpenWork }) {
         )}
       </section>
 
-      {/* Experience */}
-      <section style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Experience</div>
-        {EXP.map((e,i)=>(
-          <div key={i} style={{ display:'flex', gap:24, padding:'18px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap', alignItems:'baseline' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', minWidth:88, flexShrink:0 }}>{e.period}</div>
-            <div style={{ flex:1, minWidth:180 }}>
-              <div style={{ fontWeight:500, fontSize:14.5 }}>{e.role}</div>
-              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{e.co}</div>
+    </div>
+  );
+}
+
+// ── Experience Page ───────────────────────────────────────────────────────
+function ExperiencePage() {
+  return (
+    <div style={{ paddingTop:72, paddingBottom:96 }}>
+
+      {/* Header + download button */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:64 }}>
+        <div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:12 }}>Career</div>
+          <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>Experience</h1>
+        </div>
+        <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer"
+          style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none', flexShrink:0, marginTop:4 }}
+          onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+        >↓ Download Resume</a>
+      </div>
+
+      {/* Timeline */}
+      <div style={{ position:'relative', marginBottom:80 }}>
+        <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
+        {EXP.map((e,i) => (
+          <div key={i} style={{ display:'flex', alignItems:'flex-start', marginBottom: i < EXP.length - 1 ? 40 : 0 }}>
+            <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:3, lineHeight:1.4 }}>{e.period}</div>
+            <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', flexShrink:0, marginTop:3, position:'relative', zIndex:1 }} />
+            <div style={{ paddingLeft:20 }}>
+              <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
+              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
+              <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:5 }}>{e.tags}</div>
             </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{e.tags}</div>
           </div>
         ))}
-        <div style={{ marginTop:32 }}>
-          <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none' }}
-            onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
-            onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-          >↓ Download Resume</a>
-        </div>
+      </div>
 
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24, marginTop:56 }}>Studies</div>
+      {/* Studies */}
+      <div style={{ borderTop:'1px solid var(--border)', paddingTop:56 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24 }}>Studies</div>
         {[
           { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
           { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
           { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
-        ].map((ed,i)=>(
+        ].map((ed,i) => (
           <div key={i} style={{ display:'flex', gap:24, padding:'16px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap' }}>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:500, fontSize:14.5 }}>{ed.deg}</div>
@@ -1098,7 +1102,7 @@ function WorkPage({ tweaks, onOpenWork }) {
             <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{ed.loc}</div>
           </div>
         ))}
-      </section>
+      </div>
 
     </div>
   );
@@ -1214,16 +1218,17 @@ function App() {
           {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
 
           <div key={activePage} className="page-enter">
-            {activePage === 'home'    && <HomePage    tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
-            {activePage === 'about'   && <AboutPage   />}
-            {activePage === 'work'    && <WorkPage    tweaks={tweaks} onOpenWork={setOpenItem} />}
-            {activePage === 'writing' && <WritingPage />}
-            {activePage === 'contact' && <ContactPage />}
+            {activePage === 'home'       && <HomePage       tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
+            {activePage === 'about'      && <AboutPage      />}
+            {activePage === 'work'       && <WorkPage       tweaks={tweaks} onOpenWork={setOpenItem} />}
+            {activePage === 'experience' && <ExperiencePage />}
+            {activePage === 'writing'    && <WritingPage    />}
+            {activePage === 'contact'    && <ContactPage    />}
           </div>
 
-          <Footer />
           <ScrollToTop />
         </div>
+        <Footer />
       </div>
     </>
   );
