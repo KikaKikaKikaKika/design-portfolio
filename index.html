@@ -205,9 +205,13 @@ function WorkCardDeck({ onOpenWork }) {
     return d;
   };
 
-  // card=220px, peek=55px (25%), container=330px
-  // Left card at tx=0 (0–220), center at tx=55 (55–275, z:3 covers sides), right at tx=110 (110–330)
-  const tx    = (off) => { if (off === 0) return 55; if (off === -1) return 0; if (off === 1) return 110; return off < 0 ? -220 : 330; };
+  // card=220px, center at tx=55 (z:3 covers sides)
+  // side cards at 75% scale: visual width=165px
+  // left: tx=-14 → visual 13.5–192.5, visible 13.5–55 = ~41px (25% of 165)
+  // right: tx=124 → visual 151.5–316.5, visible 275–316.5 = ~41px (25% of 165)
+  const tx    = (off) => { if (off === 0) return 55; if (off === -1) return -14; if (off === 1) return 124; return off < 0 ? -250 : 360; };
+  const sc    = (off) => off === 0 ? 1 : 0.75;
+  const rot   = (off) => off === -1 ? -4 : off === 1 ? 4 : 0;
   const zIdx  = (off) => off === 0 ? 3 : Math.abs(off) === 1 ? 2 : 1;
   const show  = (off) => Math.abs(off) <= 1;
 
@@ -226,7 +230,7 @@ function WorkCardDeck({ onOpenWork }) {
               overflow:'hidden',
               cursor: isCenter ? 'pointer' : 'default',
               zIndex: zIdx(off),
-              transform: `translateX(${tx(off)}px)`,
+              transform: `translateX(${tx(off)}px) scale(${sc(off)}) rotate(${rot(off)}deg)`,
               transition: 'transform 0.55s cubic-bezier(0.34,1.4,0.64,1)',
               boxShadow: isCenter ? '0 8px 32px oklch(0% 0 0/0.16)' : 'none',
               visibility: show(off) ? 'visible' : 'hidden',
@@ -890,7 +894,7 @@ const EXP = [
     ],
   },
   {
-    role:'Design Leader & Manager', co:'Seqera', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain',
+    role:'Design Leader & Manager', co:'Seqera', badge:'most challenging role', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain',
     desc:'Led end-to-end experience across product, brand, and marketing during hypergrowth.',
     points:[
       'Defined UX strategy, design systems, and experience vision',
@@ -916,7 +920,7 @@ const EXP = [
   },
   { role:'Mentor', co:'ADPList', period:'2021–ongoing', tags:'Design · Freelance · Remote' },
   {
-    role:'Product Designer & Researcher', co:'WorkJam & Peerio', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada',
+    role:'Product Designer & Researcher', co:'WorkJam & Peerio', badge:'favourite company', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada',
     desc:'Designed UX for workforce collaboration and secure communication tools across two companies.',
     points:[
       'Designed UX/UI for workforce management platform at WorkJam',
@@ -928,7 +932,7 @@ const EXP = [
     ],
   },
   {
-    role:'UX Designer & Researcher', co:'Greyson & Erstebank', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic',
+    role:'UX Designer & Researcher', co:'Greyson & Erstebank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic',
     points:[
       'UX and business analysis for internet banking systems',
       'UX design for identity verification apps',
@@ -1369,7 +1373,10 @@ function ExpAccordionItem({ e }) {
             <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
               <div>
                 <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
-                <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:13, color:'var(--ink2)' }}>{e.co}</span>
+                  {e.badge && <span style={{ fontFamily:'var(--mono)', fontSize:9, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'1px 8px', opacity:0.85 }}>{e.badge}</span>}
+                </div>
                 <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:6 }}>{e.tags}</div>
               </div>
               {hasContent && (
