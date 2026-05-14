@@ -191,90 +191,70 @@ function SidebarCardFace({ item }) {
 
 function WorkCardDeck({ onOpenWork }) {
   const [active, setActive] = useState(0);
-  const [leaving, setLeaving] = useState(null);
-  const [dir, setDir] = useState(1);
-  const [animated, setAnimated] = useState(false);
   const total = WORK.length;
-  const activeRef = useRef(active);
-  const leavingRef = useRef(leaving);
-  useEffect(() => { activeRef.current = active; }, [active]);
-  useEffect(() => { leavingRef.current = leaving; }, [leaving]);
-
-  const go = (d) => {
-    if (leavingRef.current !== null) return;
-    setAnimated(true);
-    setDir(d);
-    setLeaving(activeRef.current);
-    setActive((activeRef.current + d + total) % total);
-    setTimeout(() => setLeaving(null), 440);
-  };
 
   useEffect(() => {
-    const id = setInterval(() => go(1), 3000);
+    const id = setInterval(() => setActive(i => (i + 1) % total), 3000);
     return () => clearInterval(id);
-  }, []);
+  }, [total]);
 
+  // Shortest circular distance from active
+  const offset = (idx) => {
+    let d = ((idx - active) % total + total) % total;
+    if (d > total / 2) d -= total;
+    return d;
+  };
+
+  // card width=220, container=330 → center left=55, side peek=55px
+  const tx      = (off) => off === 0 ? 55 : off < 0 ? -165 : 275;
+  const scale   = (off) => off === 0 ? 1 : 0.92;
+  const ry      = (off) => off === 0 ? 0 : off < 0 ? 5 : -5;
+  const zIdx    = (off) => off === 0 ? 3 : Math.abs(off) === 1 ? 2 : 1;
+  const visible = (off) => Math.abs(off) <= 1;
 
   return (
     <div style={{ width:330, margin:'0 auto' }}>
-      {/* Stack — 330px wide, clips behind cards to exactly 55px (1/4 of 220px) each side */}
-      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'hidden' }}>
-        {/* Behind cards — explicit pixel positioning so exactly 55px shows */}
-        {[{ left:-165, rot:-4, idx:1 }, { right:-165, rot:4, idx:2 }].map(({ left, right, rot, idx }) => (
-          <div key={idx} style={{
-            position:'absolute', width:220,
-            left: left !== undefined ? left : undefined,
-            right: right !== undefined ? right : undefined,
-            top:0, bottom:0,
-            borderRadius:20,
-            zIndex:idx,
-            transform:`rotate(${rot}deg)`,
-            transformOrigin:'center center',
-            border:'1px solid var(--border)',
-            background:'var(--bg)',
-            overflow:'hidden',
-            boxShadow:'0 8px 40px oklch(0% 0 0/0.18)',
-          }}>
-            <SidebarCardFace item={WORK[(active + idx) % total]} />
-            <div style={{ position:'absolute', inset:0, background:'oklch(5% 0 0/0.52)' }} />
-          </div>
-        ))}
-
-        {/* Leaving card */}
-        {leaving !== null && (
-          <div style={{
-            position:'absolute', left:55, top:0, bottom:0, width:220, zIndex:5,
-            border:'1px solid var(--border)', borderRadius:20,
-            background:'var(--bg)', overflow:'hidden',
-            pointerEvents:'none',
-            animation:`${dir>0?'cardLeaveR':'cardLeaveL'} 0.42s cubic-bezier(0.4,0,1,1) forwards`,
-          }}>
-            <SidebarCardFace item={WORK[leaving]} />
-          </div>
-        )}
-
-        {/* Front / active card */}
-        <div key={`card-${active}`} style={{
-          position:'absolute', left:55, top:0, bottom:0, width:220, zIndex:4,
-          border:'1px solid var(--border)', borderRadius:20,
-          background:'var(--bg)', overflow:'hidden',
-          cursor:'pointer',
-          animation: animated ? 'cardEnter 0.42s cubic-bezier(0.22,1,0.36,1) forwards' : 'none',
-        }} onClick={() => onOpenWork(WORK[active])}>
-          <SidebarCardFace item={WORK[active]} />
-        </div>
+      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'hidden', perspective:'900px' }}>
+        {WORK.map((item, idx) => {
+          const off = offset(idx);
+          const isCenter = off === 0;
+          return (
+            <div key={idx} style={{
+              position:'absolute', left:0, top:0, bottom:0, width:220,
+              borderRadius:20,
+              border:'1px solid var(--border)',
+              background:'var(--bg)',
+              overflow:'hidden',
+              cursor: isCenter ? 'pointer' : 'default',
+              zIndex: zIdx(off),
+              transform: `translateX(${tx(off)}px) scale(${scale(off)}) rotateY(${ry(off)}deg)`,
+              transition: 'transform 0.55s cubic-bezier(0.34,1.4,0.64,1)',
+              boxShadow: isCenter ? '0 8px 32px oklch(0% 0 0/0.14)' : 'none',
+              visibility: visible(off) ? 'visible' : 'hidden',
+            }} onClick={() => isCenter && onOpenWork(item)}>
+              <SidebarCardFace item={item} />
+              <div style={{
+                position:'absolute', inset:0,
+                background:'oklch(5% 0 0/0.52)',
+                opacity: isCenter ? 0 : 1,
+                transition:'opacity 0.45s ease',
+                pointerEvents:'none',
+              }} />
+            </div>
+          );
+        })}
       </div>
 
       {/* Counter + arrows */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px' }}>
-        <button onClick={() => go(-1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+        <button onClick={() => setActive(i => (i - 1 + total) % total)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
           onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
           onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
         >←</button>
         <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>
           {String(active+1).padStart(2,'0')} / {String(total).padStart(2,'0')}
         </span>
-        <button onClick={() => go(1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+        <button onClick={() => setActive(i => (i + 1) % total)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
           onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
           onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
         >→</button>
