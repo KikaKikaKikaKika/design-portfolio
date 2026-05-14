@@ -1202,42 +1202,67 @@ function WorkPage({ tweaks, onOpenWork }) {
 function ExpAccordionItem({ e }) {
   const [open, setOpen] = useState(false);
   const hasContent = e.desc || (e.points && e.points.length > 0);
+  const count = e.points ? e.points.length : 0;
   return (
     <div style={{ display:'flex', alignItems:'flex-start' }}>
-      <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:3, lineHeight:1.4 }}>{e.period}</div>
-      <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', flexShrink:0, marginTop:3, position:'relative', zIndex:1 }} />
+      <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:14, lineHeight:1.4 }}>{e.period}</div>
+      <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', flexShrink:0, marginTop:14, position:'relative', zIndex:1 }} />
       <div style={{ paddingLeft:20, flex:1 }}>
-        <button
-          onClick={() => hasContent && setOpen(!open)}
-          style={{ width:'100%', background:'none', border:'none', padding:0, display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, cursor: hasContent ? 'pointer' : 'default', textAlign:'left' }}
-        >
-          <div>
-            <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
-            <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:5 }}>{e.tags}</div>
+        {/* Card widget */}
+        <div style={{
+          border:'1px solid var(--border)', borderRadius:12,
+          background: open ? 'var(--bg2)' : 'var(--bg)',
+          transition:'background 0.2s ease',
+          overflow:'hidden',
+        }}>
+          {/* Header row */}
+          <div style={{ padding:'14px 18px' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+              <div>
+                <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
+                <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:6 }}>{e.tags}</div>
+              </div>
+              {hasContent && (
+                <button onClick={() => setOpen(!open)} style={{
+                  flexShrink:0, display:'inline-flex', alignItems:'center', gap:5,
+                  fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.04em',
+                  color: open ? 'var(--ink)' : 'var(--accent)',
+                  background: open ? 'var(--bg3)' : 'oklch(65% 0.16 55/0.08)',
+                  border: open ? '1px solid var(--border)' : '1px solid oklch(65% 0.16 55/0.25)',
+                  borderRadius:20, padding:'5px 12px',
+                  cursor:'pointer', transition:'all .18s', whiteSpace:'nowrap', marginTop:2,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity='.8'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity='1'; }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none"
+                    style={{ transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease' }}>
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {open ? 'Hide' : count > 0 ? `${count} responsibilities` : 'Details'}
+                </button>
+              )}
+            </div>
           </div>
-          {hasContent && (
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
-              style={{ flexShrink:0, transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease', color:'var(--ink3)', marginTop:2 }}>
-              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+
+          {/* Expanded content */}
+          {open && (
+            <div style={{ borderTop:'1px solid var(--border)', padding:'16px 18px 18px' }}>
+              {e.desc && <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.75, marginBottom:14, textWrap:'pretty' }}>{e.desc}</p>}
+              {e.points && (
+                <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:7 }}>
+                  {e.points.map((pt, k) => (
+                    <li key={k} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'var(--accent)', flexShrink:0, marginTop:8 }} />
+                      <span style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.65 }}>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
-        </button>
-        {open && (
-          <div style={{ marginTop:16, paddingBottom:4 }}>
-            {e.desc && <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.75, marginBottom:14, textWrap:'pretty' }}>{e.desc}</p>}
-            {e.points && (
-              <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:7 }}>
-                {e.points.map((pt, k) => (
-                  <li key={k} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                    <span style={{ width:4, height:4, borderRadius:'50%', background:'var(--accent)', flexShrink:0, marginTop:8 }} />
-                    <span style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.65 }}>{pt}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
