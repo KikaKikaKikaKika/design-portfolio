@@ -1009,9 +1009,8 @@ function ScrollToTop() {
 // ── Footer ───────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer style={{ borderTop:'1px solid var(--border)', padding:'28px 160px 40px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-      <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
-      <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+    <footer style={{ borderTop:'1px solid var(--border)', padding:'28px 40px 40px', display:'flex', justifyContent:'center', alignItems:'center', flexWrap:'wrap', gap:24 }}>
+      <div style={{ display:'flex', gap:24, flexWrap:'wrap', justifyContent:'center' }}>
         {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
           <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
             onMouseEnter={e=>e.target.style.color='var(--ink)'}
