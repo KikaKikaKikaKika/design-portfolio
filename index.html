@@ -484,40 +484,32 @@ const WORK = [
 ];
 
 // ── Article Card (mini writing card for work detail) ─────────────────────
-function ArticleCard({ href, fallbackLabel }) {
+function ArticleCard({ href, title }) {
   const [hov, setHov] = useState(false);
   const article = WRITING.find(w => w.href === href);
-  if (!article) {
-    return (
-      <a href={href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-        onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-        onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-      >{fallbackLabel || 'Read article →'}</a>
-    );
-  }
+  const img = article ? article.img : null;
+  const displayTitle = article ? article.title : title;
+  const category = article ? article.category : 'Article';
+  const readTime = article ? article.readTime : null;
   return (
     <a href={href} target="_blank" rel="noopener"
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        display:'grid', gridTemplateColumns:'140px 1fr', gap:20,
+        display:'grid', gridTemplateColumns: img ? '140px 1fr' : '1fr', gap:20,
         padding:16, borderRadius:14, border:'1px solid var(--border)',
         background: hov ? 'var(--bg2)' : 'var(--bg)',
         transition:'all .2s ease', textDecoration:'none',
         transform: hov ? 'translateY(-2px)' : 'none',
         boxShadow: hov ? '0 8px 28px oklch(0% 0 0/0.07)' : 'none',
       }}>
-      <img src={article.img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />
+      {img && <img src={img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />}
       <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
         <div>
           <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
-            {article.category && (
-              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{article.category}</span>
-            )}
-            {article.readTime && (
-              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{article.readTime} read</span>
-            )}
+            <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
+            {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
           </div>
-          <div style={{ fontSize:13.5, fontWeight:500, lineHeight:1.35, color:'var(--ink)', textWrap:'pretty' }}>{article.title}</div>
+          <div style={{ fontSize:13.5, fontWeight:500, lineHeight:1.35, color:'var(--ink)', textWrap:'pretty' }}>{displayTitle}</div>
         </div>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginTop:10, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>Read on Medium →</div>
       </div>
@@ -567,7 +559,7 @@ function ProjectAccordionItem({ p }) {
                     ))}
                   </div>
                 : p.linkLabel === 'Read article →'
-                  ? <ArticleCard href={p.href} fallbackLabel={p.linkLabel} />
+                  ? <ArticleCard href={p.href} title={p.name} />
                   : <a href={p.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
                       onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
                       onMouseLeave={e=>e.currentTarget.style.opacity='1'}
