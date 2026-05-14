@@ -62,6 +62,9 @@
 
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes testimonialSlideRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes testimonialSlideLeft  { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
 
     #tweaks-panel {
       position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--bg);
@@ -472,7 +475,7 @@ const WORK = [
   {
     title: 'AI-native Product Development',
     desc: 'Designing and implementing scalable workflows for product teams.',
-    img: 'processnew.png',
+    img: 'ai-native.png',
     accent: '270',
     companies: ['Freelance'],
     detail: {
@@ -480,6 +483,110 @@ const WORK = [
     },
   },
 ];
+
+// ── External Link Card (Medium / Dribbble) ────────────────────────────────
+function ExternalLinkCard({ href, label, title }) {
+  const [hov, setHov] = useState(false);
+  const isMedium   = href.includes('medium.com');
+  const isDribbble = href.includes('dribbble.com');
+  const article    = isMedium ? WRITING.find(w => w.href === href) : null;
+  const img        = article ? article.img : null;
+  const displayTitle = article ? article.title : (title || label);
+  const category   = article ? article.category : null;
+  const readTime   = article ? article.readTime : null;
+  const cta        = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : 'View →';
+
+  const PlatformBadge = () => isMedium ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+    </div>
+  ) : isDribbble ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#EA4C89', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.073c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.386z"/></svg>
+    </div>
+  ) : null;
+
+  return (
+    <a href={href} target="_blank" rel="noopener"
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        display:'grid', gridTemplateColumns: img ? '140px 1fr' : '1fr', gap:20,
+        padding:16, paddingRight: 44, borderRadius:14,
+        border: hov ? '1px solid var(--ink3)' : '1px solid var(--border)',
+        background: hov ? 'var(--bg2)' : 'var(--bg)',
+        transition:'all .2s ease', textDecoration:'none', position:'relative',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov ? '0 8px 24px oklch(0% 0 0/0.10)' : '0 2px 8px oklch(0% 0 0/0.04)',
+      }}>
+      {img && <img src={img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />}
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+        <div>
+          {category && (
+            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
+              {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
+            </div>
+          )}
+          <div style={{ fontSize:13.5, fontWeight:500, lineHeight:1.35, color:'var(--ink)', textWrap:'pretty' }}>{displayTitle}</div>
+        </div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginTop:10, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>{cta}</div>
+      </div>
+      <PlatformBadge />
+    </a>
+  );
+}
+
+// ── Project Accordion Item ───────────────────────────────────────────────
+function ProjectAccordionItem({ p }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      border:'1px solid var(--border)', borderRadius:12,
+      background: open ? 'var(--bg2)' : 'var(--bg)',
+      transition:'background 0.2s ease', overflow:'hidden',
+    }}>
+      {/* Header */}
+      <div onClick={() => setOpen(!open)} style={{ padding:'14px 18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap', flex:1, minWidth:0 }}>
+          {p.featured && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--accent)', color:'white', borderRadius:4, padding:'2px 8px', letterSpacing:'.06em', flexShrink:0 }}>Featured</span>}
+          {p.year && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--bg3)', borderRadius:4, padding:'2px 8px', color:'var(--ink3)', flexShrink:0 }}>{p.year}</span>}
+          {p.company && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', flexShrink:0 }}>{p.company}</span>}
+          <span style={{ fontSize:14, fontWeight:500, color:'var(--ink)' }}>{p.name}</span>
+        </div>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
+          style={{ flexShrink:0, transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease', color:'var(--ink3)' }}>
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {/* Expanded content */}
+      {open && (
+        <div style={{ borderTop:'1px solid var(--border)', padding:'16px 18px 20px' }}>
+          {p.tags && (
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+              {p.tags.map((t,j) => <span key={j} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', border:'1px solid var(--border)', borderRadius:10, padding:'1px 8px' }}>{t}</span>)}
+            </div>
+          )}
+          <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
+          {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
+          {(p.href || p.links) && (
+            <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:10 }}>
+              {(p.links || [{ href: p.href, label: p.linkLabel || 'View →' }]).map((l, k) => {
+                const isCard = l.href && (l.href.includes('medium.com') || l.href.includes('dribbble.com'));
+                return isCard
+                  ? <ExternalLinkCard key={k} href={l.href} label={l.label} title={p.name} />
+                  : <a key={k} href={l.href} target="_blank" rel="noopener"
+                      style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s', alignSelf:'flex-start' }}
+                      onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
+                      onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+                    >{l.label}</a>;
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Work Detail Overlay ─────────────────────────────────────────────────
 function WorkDetail({ item, onClose }) {
@@ -493,7 +600,7 @@ function WorkDetail({ item, onClose }) {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'flex-end' }}>
       <div onClick={onClose} style={{ position:'absolute', inset:0, background:'oklch(15% 0.012 78 / 0.45)', animation:'fadeIn 0.25s ease' }} />
-      <div className="work-detail-panel" style={{ position:'relative', zIndex:1, width:'min(50vw, 100vw)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
+      <div className="work-detail-panel" style={{ position:'relative', zIndex:1, width:'calc(100vw - 240px)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
         <div style={{ height:320, overflow:'hidden', background:'var(--bg3)' }}>
           <img src={item.img} alt={item.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
         </div>
@@ -507,42 +614,11 @@ function WorkDetail({ item, onClose }) {
           <h2 style={{ fontSize:36, fontWeight:300, letterSpacing:'-0.025em', marginBottom:16, lineHeight:1.1 }}>{item.title}</h2>
           <p style={{ fontSize:15, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty', marginBottom:40, whiteSpace:'pre-line' }}>{item.detail.body}</p>
 
-          {item.detail.projects && item.detail.projects.map((p, i) => (
-            <div key={i} style={{
-              borderTop:'1px solid var(--border)', paddingTop:28, marginTop:28,
-              ...(p.featured ? { background:'var(--bg2)', borderRadius:12, padding:'24px', marginTop:28, border:'1px solid var(--border)' } : {}),
-            }}>
-              <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:10, flexWrap:'wrap', justifyContent:'space-between' }}>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  {p.featured && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--accent)', color:'white', borderRadius:4, padding:'2px 8px', letterSpacing:'.06em' }}>Featured</span>}
-                  {p.year && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--bg3)', borderRadius:4, padding:'2px 8px', color:'var(--ink3)' }}>{p.year}</span>}
-                  {p.company && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)' }}>{p.company}</span>}
-                  {p.tags && p.tags.map((t,j) => <span key={j} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', border:'1px solid var(--border)', borderRadius:10, padding:'1px 8px' }}>{t}</span>)}
-                </div>
-              </div>
-              <h3 style={{ fontSize:16, fontWeight:600, marginBottom:8 }}>{p.name}</h3>
-              <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
-
-              {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
-
-              {(p.href || p.links) && (
-                <div style={{ display:'flex', gap:24, flexWrap:'wrap', marginTop:16 }}>
-                  {p.links
-                    ? p.links.map((l,k) => (
-                        <a key={k} href={l.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                          onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                          onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                        >{l.label}</a>
-                      ))
-                    : <a href={p.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                        onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                        onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                      >{p.linkLabel || 'View case study →'}</a>
-                  }
-                </div>
-              )}
+          {item.detail.projects && (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:8 }}>
+              {item.detail.projects.map((p, i) => <ProjectAccordionItem key={i} p={p} />)}
             </div>
-          ))}
+          )}
 
           {item.detail.points && !item.detail.projects && (
             <>
@@ -653,15 +729,15 @@ function Testimonials() {
   const [active, setActive] = useState(0);
   const t = TESTIMONIALS[active];
   return (
-    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)' }}>
+    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)', textAlign:'center' }}>
       <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Kind words</div>
-      <div style={{ maxWidth:640 }}>
+      <div style={{ maxWidth:640, margin:'0 auto' }}>
         <blockquote style={{ fontSize:19, lineHeight:1.78, fontWeight:300, fontStyle:'italic', color:'var(--ink)', textWrap:'pretty', minHeight:120 }}>"{t.text}"</blockquote>
         <div style={{ marginTop:24 }}>
           <div style={{ fontWeight:500, fontSize:14 }}>{t.name}</div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:2 }}>{t.role}</div>
         </div>
-        <div style={{ display:'flex', gap:8, marginTop:24 }}>
+        <div style={{ display:'flex', gap:8, marginTop:24, justifyContent:'center' }}>
           {TESTIMONIALS.map((_,i)=>(
             <button key={i} onClick={()=>setActive(i)} style={{ width:i===active?24:8, height:8, borderRadius:4, background:i===active?'var(--accent)':'var(--border)', border:'none', cursor:'pointer', transition:'all .25s ease', padding:0 }} />
           ))}
@@ -690,14 +766,81 @@ function Marquee() {
 
 // ── Experience data ─────────────────────────────────────────────────────
 const EXP = [
-  { role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide' },
-  { role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE' },
-  { role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain' },
-  { role:'Design Leader & Manager', co:'Seqera', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain' },
-  { role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain' },
+  {
+    role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide',
+    desc:'Built AI-native product design, scalable systems, and cross-functional innovation across product, research, and design operations.',
+  },
+  {
+    role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE',
+    desc:'Led design strategy and operations in an AI-native environment, defining how teams build and ship AI-powered products.',
+    points:[
+      'Defined AI-native product and design strategy, including orchestration of AI agents across workflows',
+      'Led end-to-end product design from research to delivery of AI-enabled experiences',
+      'Built and scaled design operations, systems, and collaboration workflows',
+      'Ran user research and workshops to validate opportunities and align stakeholders',
+      'Developed service blueprints and journey maps for AI-driven product opportunities',
+      'Prototyped and iterated on AI-based experiences with emerging tools',
+      'Partnered with engineering, product, and AI teams to deliver scalable solutions',
+    ],
+  },
+  {
+    role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain',
+    desc:'Founded and led an early-stage startup from concept to market-ready product.',
+    points:[
+      'Built MVP using Webflow',
+      'Owned product strategy, roadmap, and execution',
+      'Led UX research and iterated using user feedback and product data',
+      'Managed contractors across design and development',
+      'Defined brand, UX, and end-to-end product experience',
+      'Oversaw operations, budgeting, and delivery',
+    ],
+  },
+  {
+    role:'Design Leader & Manager', co:'Seqera', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain',
+    desc:'Led end-to-end experience across product, brand, and marketing during hypergrowth.',
+    points:[
+      'Defined UX strategy, design systems, and experience vision',
+      'Built design operations, tools, and scalable workflows',
+      'Led UX research, content design, and UX writing',
+      'Owned design system and led full brand redesign',
+      'Designed digital and event experiences across EU and US',
+      'Facilitated cross-functional workshops with executive stakeholders',
+      'Contributed hands-on to product and feature design',
+    ],
+  },
+  {
+    role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain',
+    desc:'Led UX strategy and product design across multiple digital platforms.',
+    points:[
+      'Owned UX strategy across web-based product suite',
+      'Led IA, UX, UI, and research from concept to delivery',
+      'Applied service design to optimize acquisition and sales funnels',
+      'Built and evolved design systems for scalability',
+      'Managed and mentored design team',
+      'Facilitated Design Sprints and alignment workshops',
+    ],
+  },
   { role:'Mentor', co:'ADPList', period:'2021–ongoing', tags:'Design · Freelance · Remote' },
-  { role:'Product Designer & Researcher', co:'WorkJam & Peerio', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada' },
-  { role:'UX Designer & Researcher', co:'Greyson & Erstebank', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic' },
+  {
+    role:'Product Designer & Researcher', co:'WorkJam & Peerio', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada',
+    desc:'Designed UX for workforce collaboration and secure communication tools across two companies.',
+    points:[
+      'Designed UX/UI for workforce management platform at WorkJam',
+      'Translated user needs into product features with cross-functional teams',
+      'Led brand unification efforts',
+      'Designed UX/UI for secure messaging and file-sharing platform at Peerio',
+      'Led UX research',
+      'Supported design system and visual identity',
+    ],
+  },
+  {
+    role:'UX Designer & Researcher', co:'Greyson & Erstebank', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic',
+    points:[
+      'UX and business analysis for internet banking systems',
+      'UX design for identity verification apps',
+      'UX/UI design for corporate web platforms',
+    ],
+  },
 ];
 
 // ── Writing data ─────────────────────────────────────────────────────────
@@ -705,7 +848,7 @@ const WRITING = [
   {
     title: 'AI-native product development requires a complete shift',
     href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
-    img: 'https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png',
+    img: 'writing-ai-native.png',
     excerpt: 'What it actually means to design for AI — strategy, frameworks, and the mindset shift needed to build products that are genuinely powered by intelligence, not just decorated with it.',
     category: 'AI & Product',
     readTime: '8 min',
@@ -866,9 +1009,8 @@ function ScrollToTop() {
 // ── Footer ───────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer style={{ borderTop:'1px solid var(--border)', padding:'28px 40px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-      <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
-      <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+    <footer style={{ borderTop:'1px solid var(--border)', padding:'28px 40px 40px', display:'flex', justifyContent:'center', alignItems:'center', flexWrap:'wrap', gap:24 }}>
+      <div style={{ display:'flex', gap:24, flexWrap:'wrap', justifyContent:'center' }}>
         {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
           <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
             onMouseEnter={e=>e.target.style.color='var(--ink)'}
@@ -890,7 +1032,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
   return (
     <>
       {/* Hero */}
-      <section style={{ paddingTop:80, paddingBottom:96 }}>
+      <section style={{ paddingTop:48, paddingBottom:96 }}>
         <div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
             <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
@@ -948,61 +1090,116 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
   );
 }
 
-// ── About Page ────────────────────────────────────────────────────────────
-function AboutPage() {
+// ── About Testimonial Carousel ─────────────────────────────────────────────
+function AboutTestimonials() {
+  const [active, setActive] = useState(0);
+  const [dir, setDir] = useState(1);
+  const hues = [260, 200, 160, 30, 340, 190];
+  const go = (d) => { setDir(d); setActive(i => (i + d + TESTIMONIALS.length) % TESTIMONIALS.length); };
+  const t = TESTIMONIALS[active];
+  const initials = t.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+  const hue = hues[active % hues.length];
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
-
-      {/* Header */}
-      <div style={{ marginBottom:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
-        <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
-          <img
-            src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
-            alt="Kristina Hergottová"
-            style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
-          />
-          <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
-            Kristina Hergottová
-          </h1>
-        </div>
-        <div>
-
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
-            <span className="dot-pulse" />
-            Available for hire
+    <div style={{ paddingTop:4 }}>
+      <div key={active} style={{
+        background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'24px 22px',
+        animation:`${dir > 0 ? 'testimonialSlideRight' : 'testimonialSlideLeft'} 0.55s ease forwards`
+      }}>
+        <p style={{ fontSize:13.5, lineHeight:1.75, color:'var(--ink2)', marginBottom:20, fontStyle:'italic' }}>
+          "{t.text}"
+        </p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', background:`oklch(68% 0.14 ${hue})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <span style={{ fontSize:10, fontWeight:700, color:'#fff', letterSpacing:'.03em' }}>{initials}</span>
           </div>
-
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
-            In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
-          </p>
-
-          <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-            <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
-              onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
-              onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-            >Get in touch</a>
-            <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, display:'inline-block', transition:'all .2s', fontFamily:'var(--mono)' }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
-            >↓ Resume</a>
+          <div>
+            <div style={{ fontSize:12, fontWeight:500, color:'var(--ink)', lineHeight:1.3 }}>{t.name}</div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:1 }}>{t.role}</div>
           </div>
         </div>
       </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:14 }}>
+        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+          {TESTIMONIALS.map((_,i) => (
+            <button key={i} onClick={() => go(i > active ? 1 : -1)} style={{ width:i===active?20:6, height:6, borderRadius:3, background:i===active?'var(--accent)':'var(--border)', border:'none', padding:0, cursor:'pointer', transition:'all 0.4s ease' }} />
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={() => go(-1)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'var(--ink2)', transition:'all .2s', padding:0 }}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--bg2)';e.currentTarget.style.color='var(--ink)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg)';e.currentTarget.style.color='var(--ink2)'}}
+          >←</button>
+          <button onClick={() => go(1)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'var(--ink2)', transition:'all .2s', padding:0 }}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--bg2)';e.currentTarget.style.color='var(--ink)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg)';e.currentTarget.style.color='var(--ink2)'}}
+          >→</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      {/* What I do — services */}
-      <div style={{ borderTop:'1px solid var(--border)', paddingTop:72 }}>
+// ── About Page ────────────────────────────────────────────────────────────
+function AboutPage() {
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:44 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
+
+          {/* Left: bio */}
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
+              <img
+                src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
+                alt="Kristina Hergottová"
+                style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
+              />
+              <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
+                Kristina Hergottová
+              </h1>
+            </div>
+
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
+              <span className="dot-pulse" />
+              Available for hire
+            </div>
+
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
+              In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+            </p>
+
+            <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+              <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
+                onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+              >Get in touch</a>
+            </div>
+          </div>
+
+          {/* Right: testimonial carousel — bottom-aligned with bio buttons */}
+          <div style={{ display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+            <AboutTestimonials />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Strengths — services */}
+      <div style={{ borderTop:'1px solid var(--border)', paddingTop:48 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          What I do
+          Strengths
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
           {[
@@ -1034,7 +1231,7 @@ function AboutPage() {
 // ── Work Page ─────────────────────────────────────────────────────────────
 function WorkPage({ tweaks, onOpenWork }) {
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Work grid */}
       <section style={{ paddingBottom:96 }}>
@@ -1052,16 +1249,84 @@ function WorkPage({ tweaks, onOpenWork }) {
   );
 }
 
+// ── Experience Accordion Item ─────────────────────────────────────────────
+function ExpAccordionItem({ e }) {
+  const [open, setOpen] = useState(false);
+  const hasContent = e.desc || (e.points && e.points.length > 0);
+  const count = e.points ? e.points.length : 0;
+  return (
+    <div style={{ display:'flex', alignItems:'flex-start' }}>
+      <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:14, lineHeight:1.4 }}>{e.period}</div>
+      <div style={{ position:'relative', flexShrink:0, marginTop:14, zIndex:1, width:12, height:12 }}>
+        <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid var(--accent)', animation:'ringPulse 2.4s ease-out infinite' }} />
+        <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', position:'relative', zIndex:1 }} />
+      </div>
+      <div style={{ paddingLeft:20, flex:1 }}>
+        {/* Card widget */}
+        <div style={{
+          border:'1px solid var(--border)', borderRadius:12,
+          background: open ? 'var(--bg2)' : 'var(--bg)',
+          transition:'background 0.2s ease',
+          overflow:'hidden',
+        }}>
+          {/* Header row */}
+          <div onClick={() => hasContent && setOpen(!open)} style={{ padding:'14px 18px', cursor: hasContent ? 'pointer' : 'default' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+              <div>
+                <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
+                <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:6 }}>{e.tags}</div>
+              </div>
+              {hasContent && (
+                <button onClick={() => setOpen(!open)} style={{
+                  flexShrink:0, width:28, height:28,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  background:'none', border:'none',
+                  cursor:'pointer', transition:'color .18s', color:'var(--ink3)', padding:0,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.color='var(--ink)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color='var(--ink3)'; }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none"
+                    style={{ transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease' }}>
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Expanded content */}
+          {open && (
+            <div style={{ borderTop:'1px solid var(--border)', padding:'16px 18px 18px' }}>
+              {e.desc && <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.75, marginBottom:14, textWrap:'pretty' }}>{e.desc}</p>}
+              {e.points && (
+                <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:7 }}>
+                  {e.points.map((pt, k) => (
+                    <li key={k} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'var(--accent)', flexShrink:0, marginTop:8 }} />
+                      <span style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.65 }}>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Experience Page ───────────────────────────────────────────────────────
 function ExperiencePage() {
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header + download button */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:64 }}>
         <div>
-          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:12 }}>Career</div>
-          <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>Experience</h1>
+          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
         </div>
         <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer"
           style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none', flexShrink:0, marginTop:4 }}
@@ -1074,14 +1339,8 @@ function ExperiencePage() {
       <div style={{ position:'relative', marginBottom:80 }}>
         <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
         {EXP.map((e,i) => (
-          <div key={i} style={{ display:'flex', alignItems:'flex-start', marginBottom: i < EXP.length - 1 ? 40 : 0 }}>
-            <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:3, lineHeight:1.4 }}>{e.period}</div>
-            <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', flexShrink:0, marginTop:3, position:'relative', zIndex:1 }} />
-            <div style={{ paddingLeft:20 }}>
-              <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
-              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:3 }}>{e.co}</div>
-              <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:5 }}>{e.tags}</div>
-            </div>
+          <div key={i} style={{ marginBottom: i < EXP.length - 1 ? 40 : 0 }}>
+            <ExpAccordionItem e={e} />
           </div>
         ))}
       </div>
@@ -1111,14 +1370,11 @@ function ExperiencePage() {
 // ── Writing Page ──────────────────────────────────────────────────────────
 function WritingPage() {
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header */}
       <div style={{ marginBottom:64, paddingBottom:40, borderBottom:'1px solid var(--border)' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Writing</div>
-        <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.15, maxWidth:560 }}>
-          Notes on design, leadership & systems
-        </h1>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Writing</div>
       </div>
 
       {/* Editorial cards */}
@@ -1170,8 +1426,8 @@ function WritingPage() {
 // ── Contact Page ──────────────────────────────────────────────────────────
 function ContactPage() {
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
-      <section style={{ textAlign:'center', padding:'80px 0 96px' }}>
+    <div style={{ minHeight:'calc(100vh - 140px)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center', padding:'60px 40px' }}>
+      <section style={{ maxWidth:520, width:'100%' }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:20 }}>
           <span className="dot-pulse" style={{ marginRight:8 }} /> Available for hire
         </div>
@@ -1212,8 +1468,8 @@ function App() {
   return (
     <>
       <Sidebar activePage={activePage} onNavigate={navigate} />
-      <div className="sidebar-layout" style={{ marginLeft:240 }}>
-        <div style={{ padding:'0 40px' }}>
+      <div className="sidebar-layout" style={{ marginLeft:240, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
+        <div style={{ padding:'0 40px', flex:1 }}>
 
           {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
 
