@@ -217,11 +217,11 @@ function WorkCardDeck({ onOpenWork }) {
   const behindColors = ['oklch(60% 0.15 280)', 'oklch(58% 0.16 20)'];
 
   return (
-    <div>
+    <div style={{ width:300, margin:'0 auto' }}>
       {/* Stack */}
       <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible' }}>
         {/* Behind cards — solid colored, fanned left and right */}
-        {[[-13, 0], [11, 1]].map(([rot, i]) => (
+        {[[-8, 0], [8, 1]].map(([rot, i]) => (
           <div key={i} style={{
             position:'absolute', inset:0,
             borderRadius:20,
@@ -1164,7 +1164,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div style={{ flex:'0 0 360px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+          <div style={{ flex:'0 0 360px', display:'flex', flexDirection:'column', justifyContent:'flex-end', alignItems:'center' }}>
             <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
