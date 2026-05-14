@@ -214,8 +214,8 @@ function WorkCardDeck({ onOpenWork }) {
     return () => clearInterval(id);
   }, []);
 
-  const behindRots = [3.5, -5.5, 7.5];
-  const behindScales = [0.96, 0.92, 0.87];
+  const behindRots = [8, -13, 19];
+  const behindScales = [0.97, 0.94, 0.90];
 
   return (
     <div>
@@ -231,7 +231,7 @@ function WorkCardDeck({ onOpenWork }) {
               borderRadius:20,
               zIndex:i+1,
               transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
-              transformOrigin:'center center',
+              transformOrigin:'50% 90%',
               overflow:'hidden',
               boxShadow:`0 ${(i+1)*4}px ${(i+1)*12}px oklch(0% 0 0/${0.08 + i*0.04})`,
             }}>
