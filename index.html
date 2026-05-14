@@ -36,6 +36,8 @@
     .marquee-track:hover { animation-play-state: paused; }
 
     @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+    @keyframes pageEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .page-enter { animation: pageEnter 0.28s ease forwards; }
 
     @media (max-width: 600px) {
       .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -43,19 +45,20 @@
       .stats-grid > div:nth-child(5) { border-top: 1px solid var(--border); border-right: none !important; }
       .stats-grid > div:nth-child(3) { border-right: none !important; }
       .work-grid { grid-template-columns: 1fr !important; }
-      .featured-grid { grid-template-columns: 1fr !important; }
-      .featured-grid .featured-img { order: -1; }
+      .about-grid { grid-template-columns: 1fr !important; }
+      .about-grid .about-img-col { display: none; }
+      .writing-card { grid-template-columns: 1fr !important; }
     }
     .dot-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:oklch(64% 0.16 145); animation:dot-pulse 2s ease-in-out infinite; }
 
     .sidebar-panel { transition: transform .3s ease; }
-    section[id] { scroll-margin-top: 80px; }
     @media (max-width: 768px) {
       .sidebar-layout { margin-left: 0 !important; }
       .sidebar-panel { transform: translateX(-100%); position:fixed; }
       .sidebar-panel.open { transform: translateX(0); }
       .hamburger-btn { display: flex !important; }
       .work-detail-panel { width: 100vw !important; }
+      .writing-card { grid-template-columns: 1fr !important; }
     }
 
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -164,16 +167,16 @@ function Counter({ to, suffix = '' }) {
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────
-function Sidebar() {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+function Sidebar({ activePage, onNavigate }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = [
-    { label:'Home',       href:'#home' },
-    { label:'Work',       href:'#work' },
-    { label:'Services',   href:'#process' },
-    { label:'Writing',    href:'#writing' },
-    { label:'Experience', href:'#experience' },
-    { label:'Contact',    href:'#contact' },
+    { label: 'Home',    page: 'home' },
+    { label: 'About',   page: 'about' },
+    { label: 'Work',    page: 'work' },
+    { label: 'Writing', page: 'writing' },
+    { label: 'Contact', page: 'contact' },
   ];
+  const go = (page) => { onNavigate(page); setMobileOpen(false); };
   return (
     <>
       <button className="hamburger-btn" onClick={() => setMobileOpen(!mobileOpen)} style={{
@@ -190,21 +193,32 @@ function Sidebar() {
         display:'flex', flexDirection:'column', padding:'28px 16px 24px',
         zIndex:100, overflowY:'auto',
       }}>
-        <div style={{ padding:'0 8px', marginBottom:36 }}>
-          <a href="#home" style={{ fontFamily:'var(--mono)', fontSize:13, fontWeight:500, display:'block', color:'var(--ink)', textDecoration:'none' }}>~/kristina</a>
+        <div style={{ padding:'0 8px', marginBottom:0 }}>
+          <button onClick={() => go('home')} style={{
+            fontFamily:'var(--mono)', fontSize:13, fontWeight:500, display:'block',
+            color:'var(--ink)', background:'none', border:'none', padding:0, cursor:'pointer',
+            textAlign:'left', lineHeight:1.4,
+          }}>~/kristina</button>
           <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
         </div>
+        <div style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
         <nav style={{ flex:1 }}>
-          {navItems.map(item => (
-            <a key={item.label} href={item.href} onClick={() => setMobileOpen(false)} style={{
-              display:'flex', alignItems:'center', padding:'9px 12px',
-              borderRadius:8, marginBottom:2, fontSize:14,
-              color:'var(--ink2)', textDecoration:'none', transition:'all .15s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background='var(--bg2)'; e.currentTarget.style.color='var(--ink)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--ink2)'; }}
-            >{item.label}</a>
-          ))}
+          {navItems.map(item => {
+            const isActive = activePage === item.page;
+            return (
+              <button key={item.page} onClick={() => go(item.page)} style={{
+                display:'block', width:'100%', textAlign:'left',
+                padding:'9px 12px', borderRadius:8, marginBottom:2, fontSize:14,
+                color: isActive ? 'var(--ink)' : 'var(--ink2)',
+                background: isActive ? 'var(--bg2)' : 'transparent',
+                border:'none', cursor:'pointer', transition:'all .15s',
+                fontFamily:'var(--sans)', fontWeight: isActive ? 500 : 400,
+              }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='var(--bg2)'; e.currentTarget.style.color='var(--ink)'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--ink2)'; }}}
+              >{item.label}</button>
+            );
+          })}
         </nav>
         <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
           <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
@@ -222,24 +236,7 @@ function Sidebar() {
   );
 }
 
-// ── Terminal ────────────────────────────────────────────────────────────
-function Terminal() {
-  return (
-    <div style={{ background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'18px 22px', fontFamily:'var(--mono)', fontSize:12, lineHeight:1.85, maxWidth:330, boxShadow:'0 6px 28px oklch(0% 0 0/0.12)', flexShrink:0 }}>
-      <div style={{ marginTop:4 }}><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
-      <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
-      <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
-      <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
-      <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
-      <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
-        <span className="dot-pulse" />
-        <span style={{ color:'oklch(72% 0.14 145)' }}>available for hire</span>
-      </div>
-    </div>
-  );
-}
-
-// ── Work data (9 items) ─────────────────────────────────────────────────
+// ── Work data ─────────────────────────────────────────────────────────────
 const WORK = [
   {
     title: 'Strategy',
@@ -431,9 +428,7 @@ const WORK = [
       body: 'While Kristina\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
       projects: [
         { year:'2026', company:'Photography portfolio', name:'Kristina Sport Photographer', tags:['Web Design','Branding','AI Development'], desc:'A personal photography portfolio built from scratch — designed and developed using AI-assisted tools. The site showcases work across 10+ sport categories and 5 countries, supports print and digital sales, and presents a published book and exhibition. A proof that design thinking and AI development together can produce polished, production-ready products without a traditional engineering team.',
-          links: [
-            { href:'https://kristinasportphotography.com', label:'Visit website →' },
-          ],
+          links: [{ href:'https://kristinasportphotography.com', label:'Visit website →' }],
         },
         { year:'2022–23', company:'Seqera', name:'Nextflow Summit Website', tags:['Web Design','Branding'], desc:'Led the design of a major event website under a tight three-week deadline, while also creating and evolving the event\'s visual identity each year linked to the parent brand. In 2022, reused legacy components while maintaining a fresh look. In 2023, extended the visual identity for two event locations including stationery and branded materials, while keeping the overall brand cohesive. The result was a fully functional website and a unique, year-specific brand delivered on time.',
           links: [
@@ -658,7 +653,7 @@ function Testimonials() {
   const [active, setActive] = useState(0);
   const t = TESTIMONIALS[active];
   return (
-    <section id="about" style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)' }}>
+    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)' }}>
       <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Kind words</div>
       <div style={{ maxWidth:640 }}>
         <blockquote style={{ fontSize:19, lineHeight:1.78, fontWeight:300, fontStyle:'italic', color:'var(--ink)', textWrap:'pretty', minHeight:120 }}>"{t.text}"</blockquote>
@@ -705,12 +700,48 @@ const EXP = [
   { role:'UX Designer & Researcher', co:'Greyson & Erstebank', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic' },
 ];
 
+// ── Writing data ─────────────────────────────────────────────────────────
 const WRITING = [
-  { title:'AI-native product development requires a complete shift', href:'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc', img:'https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png', desc:'As AI Lab Design Lead at RAKbank, Kristina defined what AI-empowered design means in practice — establishing the strategy, setting the direction, and creating the frameworks teams need to operate in an entirely new paradigm.' },
-  { title:'1-on-1 meetings that actually work', href:'https://medium.com/@kh.uxer/transforming-1-on-1-meetings-into-positive-and-impactful-experiences-c9adcca34c75', img:'https://framerusercontent.com/images/xq8SwQXGUoWNlL98s9SQ3UCMEw.jpg' },
-  { title:'Remote DesignOps for small teams', href:'https://medium.com/@kh.uxer/a-deep-dive-into-day-to-days-operations-tailored-to-small-remote-ux-teams-e96a695286f8', img:'https://framerusercontent.com/images/QRgcK073Ps3VXfWARVmP0PluO3g.png' },
-  { title:'Building a content style guide from scratch', href:'https://medium.com/@kh.uxer/how-to-build-a-content-style-guide-from-scratch-dce1b78aefc6', img:'https://framerusercontent.com/images/HuCjKVzDSZq9AaBrSEmc8UEQ0c.jpg' },
-  { title:'A guide to effective design feedback', href:'https://medium.com/@kh.uxer/a-guide-to-effective-design-feedback-0db6779ebff4', img:'https://framerusercontent.com/images/WPmLus9sEUlyFpd2GBQJjnbNXzY.jpg' },
+  {
+    title: 'AI-native product development requires a complete shift',
+    href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
+    img: 'https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png',
+    excerpt: 'What it actually means to design for AI — strategy, frameworks, and the mindset shift needed to build products that are genuinely powered by intelligence, not just decorated with it.',
+    category: 'AI & Product',
+    readTime: '8 min',
+  },
+  {
+    title: '1-on-1 meetings that actually work',
+    href: 'https://medium.com/@kh.uxer/transforming-1-on-1-meetings-into-positive-and-impactful-experiences-c9adcca34c75',
+    img: 'https://framerusercontent.com/images/xq8SwQXGUoWNlL98s9SQ3UCMEw.jpg',
+    excerpt: 'Transform routine status updates into genuine conversations that build trust, surface challenges early, and create real growth for both manager and team member.',
+    category: 'Leadership',
+    readTime: '5 min',
+  },
+  {
+    title: 'Remote DesignOps for small teams',
+    href: 'https://medium.com/@kh.uxer/a-deep-dive-into-day-to-days-operations-tailored-to-small-remote-ux-teams-e96a695286f8',
+    img: 'https://framerusercontent.com/images/QRgcK073Ps3VXfWARVmP0PluO3g.png',
+    excerpt: 'Practical frameworks, tools, and operating rhythms for small remote UX teams — from async communication patterns to design reviews and the rituals that keep distributed work coherent.',
+    category: 'DesignOps',
+    readTime: '7 min',
+  },
+  {
+    title: 'Building a content style guide from scratch',
+    href: 'https://medium.com/@kh.uxer/how-to-build-a-content-style-guide-from-scratch-dce1b78aefc6',
+    img: 'https://framerusercontent.com/images/HuCjKVzDSZq9AaBrSEmc8UEQ0c.jpg',
+    excerpt: 'How to create a practical, scalable content system that unifies product, marketing, and design teams around one shared voice — and keeps generating value as the company grows.',
+    category: 'Content Design',
+    readTime: '6 min',
+  },
+  {
+    title: 'A guide to effective design feedback',
+    href: 'https://medium.com/@kh.uxer/a-guide-to-effective-design-feedback-0db6779ebff4',
+    img: 'https://framerusercontent.com/images/WPmLus9sEUlyFpd2GBQJjnbNXzY.jpg',
+    excerpt: 'Making design feedback objective, constructive, and actionable — building a culture where critique strengthens the work and the team, rather than creating friction.',
+    category: 'Design Process',
+    readTime: '4 min',
+  },
 ];
 
 // ── AI Lab detail item ──────────────────────────────────────────────────
@@ -801,227 +832,7 @@ function ProjectTabs({ scale, pillars, methods, outcomes }) {
   );
 }
 
-// ── App ─────────────────────────────────────────────────────────────────
-function App() {
-  const tweaks = useTweaks();
-  const greeting = getGreeting(tweaks.greeting);
-  const [openItem, setOpenItem] = useState(null);
-
-  return (
-    <>
-      <Sidebar />
-      <div className="sidebar-layout" style={{ marginLeft:240 }}>
-      <div style={{ maxWidth:860, margin:'0 auto', padding:'0 40px' }}>
-
-      {/* ── Detail Overlay ── */}
-      {openItem && <WorkDetail item={openItem} onClose={()=>setOpenItem(null)} />}
-
-      {/* ── Hero ── */}
-      <section id="home" style={{ paddingTop:80, paddingBottom:96 }}>
-        <div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap' }}>
-          <div style={{ flex:'1 1 380px' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
-              <span className="dot-pulse" /> Available for hire
-            </div>
-            <h1 style={{ fontSize:'clamp(38px, 5.5vw, 60px)', fontWeight:300, lineHeight:1.12, letterSpacing:'-0.025em', marginBottom:10 }}>
-              {greeting}
-            </h1>
-            <h2 style={{ fontSize:'clamp(14px, 2vw, 17px)', fontWeight:400, color:'var(--ink2)', marginBottom:24, letterSpacing:'-0.01em' }}>
-              Design Leader who builds <span style={{ color:'var(--ink)', fontWeight:500 }}>teams</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>systems</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>products</span>
-            </h2>
-            <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty' }}>
-              Since 2015, I've helped startups and global brands turn big ideas into real-world results. I lead design from start to finish — not just setting the vision, but handling the research, strategy, and execution needed to get there.
-            </p>
-            <div style={{ marginTop:32, display:'flex', gap:12, flexWrap:'wrap' }}>
-              <a href="#work" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, transition:'opacity .2s' }}
-                onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
-                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-              >View my work</a>
-              <a href="mailto:hergottovak@gmail.com" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, transition:'all .2s' }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
-              >Say hello</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats (5 cols) ── */}
-      <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', marginBottom:96 }}>
-        {[
-          { to:10, s:'+', l:'Years in product', sub:'2015 → Now' },
-          { to:5,  s:'',  l:'Design systems',   sub:'Created or scaled' },
-          { to:6,  s:'+', l:'Products shipped',  sub:'Across 5 industries' },
-          { to:3,  s:'',  l:'Teams built',       sub:'From 0 to scale' },
-          { to:1,  s:'',  l:'AI Lab led',        sub:'RAKbank · 2025' },
-        ].map((s,i)=>(
-          <div key={i} style={{ padding:'24px 20px', borderRight:i<4?'1px solid var(--border)':'none', background:i===2?'var(--bg2)':'transparent' }}>
-            <div style={{ fontSize:34, fontWeight:300, letterSpacing:'-0.03em', lineHeight:1 }}>
-              <Counter to={s.to} suffix={s.s} />
-            </div>
-            <div style={{ fontWeight:500, fontSize:12, marginTop:8 }}>{s.l}</div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:3 }}>{s.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Work (9 items) ── */}
-      <section id="work" style={{ paddingBottom:96 }}>
-        <div style={{ marginBottom:40 }}>
-          <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Work</div>
-        </div>
-        {tweaks.layout === 'list' ? (
-          <div>{WORK.map((item,i)=><WorkListItem key={i} item={item} onOpen={setOpenItem}/>)}</div>
-        ) : (
-          <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
-            {WORK.map((item,i)=><WorkCard key={i} item={item} onOpen={setOpenItem}/>)}
-          </div>
-        )}
-      </section>
-
-      {/* ── Marquee ── */}
-      <Marquee />
-
-      {/* ── Testimonials ── */}
-      <Testimonials />
-
-      {/* ── How I Work (6 items) ── */}
-      <section id="process" style={{ paddingBottom:96 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          Services
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
-          {[
-            { icon:'◎', title:'Strategy & Vision', desc:'Defines product and design strategy in partnership with founders, translating business objectives into clear product direction. Connects customer insight, market opportunity, and capability to shape roadmaps and guide investment.' },
-            { icon:'◈', title:'Leadership', desc:'Builds and leads multidisciplinary design teams, fostering environments where people do their best work. Establishes operating rhythms while mentoring individuals and strengthening collaboration across product, engineering, and marketing.' },
-            { icon:'◐', title:'Cross-Functional Collaboration', desc:'Facilitates alignment across product, engineering, marketing, and leadership through design thinking and agile practices. Leads workshops and discovery sessions that clarify priorities, navigate complexity, and move teams forward.' },
-            { icon:'◆', title:'Product & Experience Design', desc:'Leads complex product initiatives from concept to launch while building scalable design systems and workflows. Balances strategic vision with practical execution, ensuring teams ship high-quality experiences that serve users and business goals.' },
-            { icon:'◇', title:'Service Design', desc:'Leads service design initiatives that transform internal and customer-facing ecosystems across all touchpoints. Defines problem spaces, turning high-level ambitions into actionable service blueprints and prototypes that align stakeholders.' },
-            { icon:'○', title:'Research & Insight', desc:'Embeds research into product development, combining qualitative and quantitative methods to inform strategy and reduce risk. Champions evidence-based decision-making, turning insights into actionable direction that aligns teams.' },
-          ].map((s,i)=>(
-            <div key={i} style={{
-              padding:'32px 28px',
-              borderRight: i%2===0 ? '1px solid var(--border)' : 'none',
-              borderBottom: i<4 ? '1px solid var(--border)' : 'none',
-              background:'var(--bg)',
-            }}>
-              <div style={{ fontSize:18, color:'var(--accent)', marginBottom:12 }}>{s.icon}</div>
-              <h3 style={{ fontSize:15, fontWeight:600, marginBottom:8 }}>{s.title}</h3>
-              <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.68, textWrap:'pretty' }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Writing ── */}
-      <section id="writing" style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          Writing
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(360px, 1fr))', gap:14 }}>
-          {WRITING.map((w,i)=>{
-            const [hov, setHov] = useState(false);
-            return (
-              <a key={i} href={w.href} target="_blank" rel="noopener"
-                onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-                style={{ display:'flex', gap:16, border:'1px solid var(--border)', borderRadius:14, padding:14, alignItems:'center',
-                  background:hov?'var(--bg2)':'transparent', transform:hov?'translateY(-2px)':'none',
-                  boxShadow:hov?'0 8px 28px oklch(0% 0 0/0.06)':'none', transition:'all .22s ease' }}>
-                <img src={w.img} alt="" style={{ width:68, height:54, objectFit:'cover', borderRadius:8, flexShrink:0 }} />
-                <div>
-                  <div style={{ fontSize:14, fontWeight:500, lineHeight:1.4 }}>{w.title}</div>
-                  {w.desc && <div style={{ fontSize:12, color:'var(--ink2)', lineHeight:1.55, marginTop:4, textWrap:'pretty' }}>{w.desc}</div>}
-                  <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:4 }}>Read on Medium →</div>
-                </div>
-              </a>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Experience ── */}
-      <section id="experience" style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Experience</div>
-        {EXP.map((e,i)=>(
-          <div key={i} style={{ display:'flex', gap:24, padding:'18px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap', alignItems:'baseline' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', minWidth:88, flexShrink:0 }}>{e.period}</div>
-            <div style={{ flex:1, minWidth:180 }}>
-              <div style={{ fontWeight:500, fontSize:14.5 }}>{e.role}</div>
-              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{e.co}</div>
-            </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{e.tags}</div>
-          </div>
-        ))}
-        <div style={{ marginTop:32 }}>
-          <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none' }}
-            onMouseEnter={e=>e.currentTarget.style.background='var(--surface)'}
-            onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-          >↓ Download Resume</a>
-        </div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24, marginTop:56 }}>Studies</div>
-        {[
-          { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
-          { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
-          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
-        ].map((ed,i)=>(
-          <div key={i} style={{ display:'flex', gap:24, padding:'16px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap' }}>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:500, fontSize:14.5 }}>{ed.deg}</div>
-              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{ed.school}</div>
-            </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{ed.loc}</div>
-          </div>
-        ))}
-      </section>
-
-      {/* ── CTA ── */}
-      <section id="contact" style={{ textAlign:'center', padding:'80px 0 96px' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:20 }}>
-          <span className="dot-pulse" style={{ marginRight:8 }} /> Available for hire
-        </div>
-        <h2 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.02em', marginBottom:12 }}>
-          Interested in working together?
-        </h2>
-        <p style={{ color:'var(--ink2)', fontSize:15, marginBottom:32 }}>
-          Real progress happens where clarity and execution align.
-        </p>
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
-          <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
-            onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
-            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-          >Contact</a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener" style={{ background:'none', color:'var(--ink)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', border:'1px solid var(--border)', transition:'all .2s' }}
-            onMouseEnter={e=>{ e.currentTarget.style.borderColor='var(--ink)'; }}
-            onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; }}
-          >Connect on LinkedIn</a>
-        </div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:16 }}>hergottovak@gmail.com</div>
-      </section>
-
-      {/* ── Marquee 2 ── */}
-      <Marquee />
-
-      {/* ── Footer ── */}
-      <footer style={{ padding:'32px 0 48px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
-        <div style={{ display:'flex', gap:24 }}>
-          {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
-            <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
-              onMouseEnter={e=>e.target.style.color='var(--ink)'}
-              onMouseLeave={e=>e.target.style.color='var(--ink3)'}
-            >{l}</a>
-          ))}
-        </div>
-      </footer>
-
-      {/* ── Scroll to top ── */}
-      <ScrollToTop />
-      </div>
-      </div>
-    </>
-  );
-}
-
+// ── ScrollToTop ──────────────────────────────────────────────────────────
 function ScrollToTop() {
   const [visible, setVisible] = React.useState(false);
   React.useEffect(() => {
@@ -1049,6 +860,386 @@ function ScrollToTop() {
         <polyline points="18 15 12 9 6 15"/>
       </svg>
     </button>
+  );
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <>
+      <Marquee />
+      <footer style={{ padding:'32px 0 48px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
+        <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
+        <div style={{ display:'flex', gap:24 }}>
+          {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
+            <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
+              onMouseEnter={e=>e.target.style.color='var(--ink)'}
+              onMouseLeave={e=>e.target.style.color='var(--ink3)'}
+            >{l}</a>
+          ))}
+        </div>
+      </footer>
+    </>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ── PAGE COMPONENTS ─────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+
+// ── Home Page ────────────────────────────────────────────────────────────
+function HomePage({ tweaks, onNavigate, onOpenWork }) {
+  const greeting = getGreeting(tweaks.greeting);
+  return (
+    <>
+      {/* Hero */}
+      <section style={{ paddingTop:80, paddingBottom:96 }}>
+        <div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap' }}>
+          <div style={{ flex:'1 1 380px' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
+              <span className="dot-pulse" /> Available for hire
+            </div>
+            <h1 style={{ fontSize:'clamp(38px, 5.5vw, 60px)', fontWeight:300, lineHeight:1.12, letterSpacing:'-0.025em', marginBottom:10 }}>
+              {greeting}
+            </h1>
+            <h2 style={{ fontSize:'clamp(14px, 2vw, 17px)', fontWeight:400, color:'var(--ink2)', marginBottom:24, letterSpacing:'-0.01em' }}>
+              Design Leader who builds <span style={{ color:'var(--ink)', fontWeight:500 }}>teams</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>systems</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>products</span>
+            </h2>
+            <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty' }}>
+              Since 2015, I've helped startups and global brands turn big ideas into real-world results. I lead design from start to finish — not just setting the vision, but handling the research, strategy, and execution needed to get there.
+            </p>
+            <div style={{ marginTop:32, display:'flex', gap:12, flexWrap:'wrap' }}>
+              <button onClick={() => onNavigate('work')} style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, border:'none', cursor:'pointer', transition:'opacity .2s' }}
+                onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+              >View my work</button>
+              <a href="mailto:hergottovak@gmail.com" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, transition:'all .2s', display:'inline-block' }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
+              >Say hello</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', marginBottom:96 }}>
+        {[
+          { to:10, s:'+', l:'Years in product', sub:'2015 → Now' },
+          { to:5,  s:'',  l:'Design systems',   sub:'Created or scaled' },
+          { to:6,  s:'+', l:'Products shipped',  sub:'Across 5 industries' },
+          { to:3,  s:'',  l:'Teams built',       sub:'From 0 to scale' },
+          { to:1,  s:'',  l:'AI Lab led',        sub:'RAKbank · 2025' },
+        ].map((s,i)=>(
+          <div key={i} style={{ padding:'24px 20px', borderRight:i<4?'1px solid var(--border)':'none', background:i===2?'var(--bg2)':'transparent' }}>
+            <div style={{ fontSize:34, fontWeight:300, letterSpacing:'-0.03em', lineHeight:1 }}>
+              <Counter to={s.to} suffix={s.s} />
+            </div>
+            <div style={{ fontWeight:500, fontSize:12, marginTop:8 }}>{s.l}</div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:3 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Featured work — first 3 */}
+      <section style={{ paddingBottom:96 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:40 }}>
+          <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Featured Work</div>
+          <button onClick={() => onNavigate('work')} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', background:'none', border:'none', cursor:'pointer', padding:0, transition:'opacity .2s' }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='.65'}
+            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+          >View all →</button>
+        </div>
+        <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
+          {WORK.slice(0, 3).map((item,i) => <WorkCard key={i} item={item} onOpen={onOpenWork} />)}
+        </div>
+      </section>
+
+      {/* Marquee */}
+      <Marquee />
+
+      {/* Testimonials */}
+      <Testimonials />
+
+      <Footer />
+    </>
+  );
+}
+
+// ── About Page ────────────────────────────────────────────────────────────
+function AboutPage() {
+  return (
+    <div style={{ paddingTop:72, paddingBottom:96 }}>
+
+      {/* Editorial header + image grid */}
+      <div className="about-grid" style={{ display:'grid', gridTemplateColumns:'1fr 360px', gap:72, alignItems:'start', marginBottom:80 }}>
+
+        {/* Left: bio */}
+        <div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
+          <h1 style={{ fontSize:'clamp(32px, 4vw, 48px)', fontWeight:300, letterSpacing:'-0.025em', marginBottom:28, lineHeight:1.1 }}>
+            Kristina Hergottová
+          </h1>
+
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
+            <span className="dot-pulse" />
+            Available for hire
+          </div>
+
+          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+            Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+          </p>
+          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+            Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
+          </p>
+          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+            Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+          </p>
+          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
+            In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+          </p>
+
+          <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+            <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
+              onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+              onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+            >Get in touch</a>
+            <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, display:'inline-block', transition:'all .2s', fontFamily:'var(--mono)' }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
+            >↓ Resume</a>
+          </div>
+        </div>
+
+        {/* Right: image — sticky */}
+        <div className="about-img-col" style={{ position:'sticky', top:32 }}>
+          <img
+            src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
+            alt="Kristina Hergottová"
+            style={{
+              width:'100%',
+              borderRadius:24,
+              boxShadow:'0 24px 80px oklch(0% 0 0/0.11), 0 8px 24px oklch(0% 0 0/0.06)',
+              display:'block',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* What I do — services */}
+      <div style={{ borderTop:'1px solid var(--border)', paddingTop:72 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
+          What I do
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
+          {[
+            { icon:'◎', title:'Strategy & Vision', desc:'Defines product and design strategy in partnership with founders, translating business objectives into clear product direction. Connects customer insight, market opportunity, and capability to shape roadmaps and guide investment.' },
+            { icon:'◈', title:'Leadership', desc:'Builds and leads multidisciplinary design teams, fostering environments where people do their best work. Establishes operating rhythms while mentoring individuals and strengthening collaboration across product, engineering, and marketing.' },
+            { icon:'◐', title:'Cross-Functional Collaboration', desc:'Facilitates alignment across product, engineering, marketing, and leadership through design thinking and agile practices. Leads workshops and discovery sessions that clarify priorities, navigate complexity, and move teams forward.' },
+            { icon:'◆', title:'Product & Experience Design', desc:'Leads complex product initiatives from concept to launch while building scalable design systems and workflows. Balances strategic vision with practical execution, ensuring teams ship high-quality experiences that serve users and business goals.' },
+            { icon:'◇', title:'Service Design', desc:'Leads service design initiatives that transform internal and customer-facing ecosystems across all touchpoints. Defines problem spaces, turning high-level ambitions into actionable service blueprints and prototypes that align stakeholders.' },
+            { icon:'○', title:'Research & Insight', desc:'Embeds research into product development, combining qualitative and quantitative methods to inform strategy and reduce risk. Champions evidence-based decision-making, turning insights into actionable direction that aligns teams.' },
+          ].map((s,i)=>(
+            <div key={i} style={{
+              padding:'32px 28px',
+              borderRight: i%2===0 ? '1px solid var(--border)' : 'none',
+              borderBottom: i<4 ? '1px solid var(--border)' : 'none',
+              background:'var(--bg)',
+            }}>
+              <div style={{ fontSize:18, color:'var(--accent)', marginBottom:12 }}>{s.icon}</div>
+              <h3 style={{ fontSize:15, fontWeight:600, marginBottom:8 }}>{s.title}</h3>
+              <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.68, textWrap:'pretty' }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
+
+// ── Work Page ─────────────────────────────────────────────────────────────
+function WorkPage({ tweaks, onOpenWork }) {
+  return (
+    <div style={{ paddingTop:72, paddingBottom:96 }}>
+
+      {/* Work grid */}
+      <section style={{ paddingBottom:96 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Work</div>
+        {tweaks.layout === 'list' ? (
+          <div>{WORK.map((item,i) => <WorkListItem key={i} item={item} onOpen={onOpenWork} />)}</div>
+        ) : (
+          <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
+            {WORK.map((item,i) => <WorkCard key={i} item={item} onOpen={onOpenWork} />)}
+          </div>
+        )}
+      </section>
+
+      {/* Experience */}
+      <section style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Experience</div>
+        {EXP.map((e,i)=>(
+          <div key={i} style={{ display:'flex', gap:24, padding:'18px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap', alignItems:'baseline' }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', minWidth:88, flexShrink:0 }}>{e.period}</div>
+            <div style={{ flex:1, minWidth:180 }}>
+              <div style={{ fontWeight:500, fontSize:14.5 }}>{e.role}</div>
+              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{e.co}</div>
+            </div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{e.tags}</div>
+          </div>
+        ))}
+        <div style={{ marginTop:32 }}>
+          <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none' }}
+            onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+            onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+          >↓ Download Resume</a>
+        </div>
+
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24, marginTop:56 }}>Studies</div>
+        {[
+          { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
+          { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
+          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
+        ].map((ed,i)=>(
+          <div key={i} style={{ display:'flex', gap:24, padding:'16px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap' }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:500, fontSize:14.5 }}>{ed.deg}</div>
+              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{ed.school}</div>
+            </div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{ed.loc}</div>
+          </div>
+        ))}
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
+
+// ── Writing Page ──────────────────────────────────────────────────────────
+function WritingPage() {
+  return (
+    <div style={{ paddingTop:72, paddingBottom:96 }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:64, paddingBottom:40, borderBottom:'1px solid var(--border)' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Writing</div>
+        <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.15, maxWidth:560 }}>
+          Notes on design, leadership & systems
+        </h1>
+      </div>
+
+      {/* Editorial cards */}
+      <div style={{ display:'grid', gap:24 }}>
+        {WRITING.map((w, i) => {
+          const [hov, setHov] = useState(false);
+          return (
+            <a key={i} href={w.href} target="_blank" rel="noopener"
+              onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+              className="writing-card"
+              style={{
+                display:'grid', gridTemplateColumns:'220px 1fr', gap:32,
+                padding:28, borderRadius:20, border:'1px solid var(--border)',
+                background: hov ? 'var(--bg2)' : 'var(--bg)',
+                transition:'all .22s ease',
+                transform: hov ? 'translateY(-2px)' : 'none',
+                boxShadow: hov ? '0 12px 40px oklch(0% 0 0/0.07)' : 'none',
+              }}>
+              <img src={w.img} alt=""
+                style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:12, display:'block' }} />
+              <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between', minHeight:110 }}>
+                <div>
+                  <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14 }}>
+                    {w.category && (
+                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'3px 10px', letterSpacing:'.06em' }}>
+                        {w.category}
+                      </span>
+                    )}
+                    {w.readTime && (
+                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{w.readTime} read</span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize:18, fontWeight:500, lineHeight:1.35, marginBottom:10, letterSpacing:'-0.01em' }}>{w.title}</h3>
+                  <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{w.excerpt}</p>
+                </div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', marginTop:16, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>
+                  Read on Medium →
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
+
+// ── Contact Page ──────────────────────────────────────────────────────────
+function ContactPage() {
+  return (
+    <div style={{ paddingTop:72, paddingBottom:96 }}>
+      <section style={{ textAlign:'center', padding:'80px 0 96px' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:20 }}>
+          <span className="dot-pulse" style={{ marginRight:8 }} /> Available for hire
+        </div>
+        <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.15 }}>
+          Interested in working together?
+        </h1>
+        <p style={{ color:'var(--ink2)', fontSize:15, marginBottom:32, maxWidth:460, margin:'0 auto 32px' }}>
+          Real progress happens where clarity and execution align.
+        </p>
+        <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
+          <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+            onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+          >Send a message</a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener" style={{ background:'none', color:'var(--ink)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', border:'1px solid var(--border)', transition:'all .2s' }}
+            onMouseEnter={e=>{ e.currentTarget.style.borderColor='var(--ink)'; }}
+            onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; }}
+          >Connect on LinkedIn</a>
+        </div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:20 }}>hergottovak@gmail.com</div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
+
+// ── App ─────────────────────────────────────────────────────────────────
+function App() {
+  const tweaks = useTweaks();
+  const [activePage, setActivePage] = useState('home');
+  const [openItem, setOpenItem] = useState(null);
+
+  const navigate = (page) => {
+    setActivePage(page);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  return (
+    <>
+      <Sidebar activePage={activePage} onNavigate={navigate} />
+      <div className="sidebar-layout" style={{ marginLeft:240 }}>
+        <div style={{ maxWidth:860, margin:'0 auto', padding:'0 40px' }}>
+
+          {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
+
+          <div key={activePage} className="page-enter">
+            {activePage === 'home'    && <HomePage    tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
+            {activePage === 'about'   && <AboutPage   />}
+            {activePage === 'work'    && <WorkPage    tweaks={tweaks} onOpenWork={setOpenItem} />}
+            {activePage === 'writing' && <WritingPage />}
+            {activePage === 'contact' && <ContactPage />}
+          </div>
+
+          <ScrollToTop />
+        </div>
+      </div>
+    </>
   );
 }
 
