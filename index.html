@@ -172,6 +172,15 @@ function Counter({ to, suffix = '' }) {
 }
 
 // ── Sidebar Card Deck ────────────────────────────────────────────────────
+function AvailableBadge() {
+  return (
+    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12 }}>
+      <span className="dot-pulse" />
+      <span style={{ color:'oklch(72% 0.14 145)' }}>Available for hire</span>
+    </div>
+  );
+}
+
 function SidebarCardFace({ item }) {
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
@@ -1133,8 +1142,8 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
       <section style={{ paddingTop:48, paddingBottom:96 }}>
         <div style={{ display:'flex', gap:56, alignItems:'stretch', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
-              <span className="dot-pulse" /> Available for hire
+            <div style={{ marginBottom:28 }}>
+              <AvailableBadge />
             </div>
             <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1, marginBottom:10 }}>
               {greeting}
@@ -1261,9 +1270,8 @@ function AboutPage() {
               </h1>
             </div>
 
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
-              <span className="dot-pulse" />
-              Available for hire
+            <div style={{ marginBottom:32 }}>
+              <AvailableBadge />
             </div>
 
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
@@ -1530,8 +1538,8 @@ function ContactPage() {
   return (
     <div style={{ minHeight:'calc(100vh - 140px)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center', padding:'60px 40px' }}>
       <section style={{ maxWidth:520, width:'100%' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:20 }}>
-          <span className="dot-pulse" style={{ marginRight:8 }} /> Available for hire
+        <div style={{ marginBottom:20 }}>
+          <AvailableBadge />
         </div>
         <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.15 }}>
           Interested in working together?
