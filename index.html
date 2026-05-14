@@ -1224,7 +1224,7 @@ function App() {
     <>
       <Sidebar activePage={activePage} onNavigate={navigate} />
       <div className="sidebar-layout" style={{ marginLeft:240 }}>
-        <div style={{ maxWidth:860, margin:'0 auto', padding:'0 40px' }}>
+        <div style={{ padding:'0 40px' }}>
 
           {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
 
