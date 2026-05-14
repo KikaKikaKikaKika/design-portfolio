@@ -64,6 +64,7 @@
     @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
     @keyframes testimonialSlideRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes testimonialSlideLeft  { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
 
     #tweaks-panel {
       position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--bg);
@@ -511,11 +512,11 @@ function ExternalLinkCard({ href, label, title }) {
       style={{
         display:'grid', gridTemplateColumns: img ? '140px 1fr' : '1fr', gap:20,
         padding:16, paddingRight: 44, borderRadius:14,
-        border: hov ? '1px solid var(--ink3)' : '1px solid var(--border)',
-        background: hov ? 'oklch(94% 0.012 78)' : 'var(--bg3)',
+        border: hov ? '1px solid oklch(72% 0.10 55)' : '1px solid oklch(82% 0.07 55)',
+        background: hov ? 'oklch(88% 0.06 55)' : 'oklch(92% 0.045 55)',
         transition:'all .2s ease', textDecoration:'none', position:'relative',
         transform: hov ? 'translateY(-2px)' : 'none',
-        boxShadow: hov ? '0 8px 24px oklch(0% 0 0/0.10)' : '0 2px 8px oklch(0% 0 0/0.05)',
+        boxShadow: hov ? '0 8px 24px oklch(0% 0 0/0.10)' : '0 2px 8px oklch(0% 0 0/0.04)',
       }}>
       {img && <img src={img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />}
       <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
@@ -1256,7 +1257,10 @@ function ExpAccordionItem({ e }) {
   return (
     <div style={{ display:'flex', alignItems:'flex-start' }}>
       <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:14, lineHeight:1.4 }}>{e.period}</div>
-      <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', flexShrink:0, marginTop:14, position:'relative', zIndex:1 }} />
+      <div style={{ position:'relative', flexShrink:0, marginTop:14, zIndex:1, width:12, height:12 }}>
+        <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid var(--accent)', animation:'ringPulse 2.4s ease-out infinite' }} />
+        <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', position:'relative', zIndex:1 }} />
+      </div>
       <div style={{ paddingLeft:20, flex:1 }}>
         {/* Card widget */}
         <div style={{
@@ -1317,7 +1321,7 @@ function ExpAccordionItem({ e }) {
 // ── Experience Page ───────────────────────────────────────────────────────
 function ExperiencePage() {
   return (
-    <div style={{ paddingTop:72, paddingBottom:96 }}>
+    <div style={{ paddingTop:40, paddingBottom:96 }}>
 
       {/* Header + download button */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:64 }}>
