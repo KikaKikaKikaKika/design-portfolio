@@ -214,36 +214,24 @@ function WorkCardDeck({ onOpenWork }) {
     return () => clearInterval(id);
   }, []);
 
-  const behindRots = [8, -13, 19];
-  const behindScales = [0.97, 0.94, 0.90];
+  const behindColors = ['oklch(60% 0.15 280)', 'oklch(58% 0.16 20)'];
 
   return (
     <div>
       {/* Stack */}
-      <div style={{ position:'relative', height:272, marginBottom:14 }}>
-        {/* Behind cards — show real card previews */}
-        {[2,1,0].map(i => {
-          const cardItem = WORK[(active + i + 1) % total];
-          return (
-            <div key={i} style={{
-              position:'absolute', inset:0,
-              border:'1px solid var(--border)',
-              borderRadius:20,
-              zIndex:i+1,
-              transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
-              transformOrigin:'50% 90%',
-              overflow:'hidden',
-              boxShadow:`0 ${(i+1)*4}px ${(i+1)*12}px oklch(0% 0 0/${0.08 + i*0.04})`,
-            }}>
-              <div style={{ height:160, overflow:'hidden', background:'var(--bg3)' }}>
-                <img src={cardItem.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity: 0.55 + i*0.15 }} />
-              </div>
-              <div style={{ background:'var(--bg2)', height:'100%', padding:'12px 14px' }}>
-                <div style={{ fontSize:13, fontWeight:500, color:'var(--ink2)' }}>{cardItem.title}</div>
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible' }}>
+        {/* Behind cards — solid colored, fanned left and right */}
+        {[[-13, 0], [11, 1]].map(([rot, i]) => (
+          <div key={i} style={{
+            position:'absolute', inset:0,
+            borderRadius:20,
+            zIndex:i+1,
+            transform:`rotate(${rot}deg)`,
+            transformOrigin:'center center',
+            background: behindColors[i],
+            boxShadow:'0 8px 32px oklch(0% 0 0/0.18)',
+          }} />
+        ))}
 
         {/* Leaving card */}
         {leaving !== null && (
