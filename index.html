@@ -219,20 +219,21 @@ function WorkCardDeck({ onOpenWork }) {
     <div style={{ width:300, margin:'0 auto' }}>
       {/* Stack */}
       <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible' }}>
-        {/* Behind cards — real cards with content */}
-        {[[-8, 0], [8, 1]].map(([rot, i]) => (
+        {/* Behind cards — offset left/right with dark overlay */}
+        {[[-44, -4, 0], [44, 4, 1]].map(([tx, rot, i]) => (
           <div key={i} style={{
             position:'absolute', inset:0,
             borderRadius:20,
             zIndex:i+1,
-            transform:`rotate(${rot}deg)`,
+            transform:`translateX(${tx}%) rotate(${rot}deg)`,
             transformOrigin:'center center',
             border:'1px solid var(--border)',
             background:'var(--bg)',
             overflow:'hidden',
-            boxShadow:'0 8px 32px oklch(0% 0 0/0.12)',
+            boxShadow:'0 8px 40px oklch(0% 0 0/0.18)',
           }}>
             <SidebarCardFace item={WORK[(active + i + 1) % total]} />
+            <div style={{ position:'absolute', inset:0, background:'oklch(5% 0 0/0.55)' }} />
           </div>
         ))}
 
