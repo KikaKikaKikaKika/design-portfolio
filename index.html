@@ -547,7 +547,7 @@ function WorkDetail({ item, onClose }) {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'flex-end' }}>
       <div onClick={onClose} style={{ position:'absolute', inset:0, background:'oklch(15% 0.012 78 / 0.45)', animation:'fadeIn 0.25s ease' }} />
-      <div className="work-detail-panel" style={{ position:'relative', zIndex:1, width:'min(50vw, 100vw)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
+      <div className="work-detail-panel" style={{ position:'relative', zIndex:1, width:'calc(100vw - 240px)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
         <div style={{ height:320, overflow:'hidden', background:'var(--bg3)' }}>
           <img src={item.img} alt={item.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
         </div>
