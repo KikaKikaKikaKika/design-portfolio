@@ -174,9 +174,9 @@ function Counter({ to, suffix = '' }) {
 // ── Sidebar Card Deck ────────────────────────────────────────────────────
 function AvailableBadge() {
   return (
-    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12 }}>
+    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12, color:'oklch(72% 0.14 145)', border:'1px solid oklch(72% 0.14 145/0.45)', borderRadius:20, padding:'5px 12px' }}>
       <span className="dot-pulse" />
-      <span style={{ color:'oklch(72% 0.14 145)' }}>Available for hire</span>
+      <span>Available for hire</span>
     </div>
   );
 }
@@ -1434,7 +1434,7 @@ function ExperiencePage() {
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header + download button */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:64 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:40 }}>
         <div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
         </div>
@@ -1483,7 +1483,7 @@ function WritingPage() {
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header */}
-      <div style={{ marginBottom:64, paddingBottom:40, borderBottom:'1px solid var(--border)' }}>
+      <div style={{ marginBottom:40 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Writing</div>
       </div>
 
