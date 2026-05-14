@@ -216,31 +216,34 @@ function WorkCardDeck({ onOpenWork }) {
 
 
   return (
-    <div>
-      {/* Stack */}
-      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible', width:220, margin:'0 auto' }}>
-        {/* Behind cards — offset left/right with dark overlay */}
-        {[[-75, -4, 0], [75, 4, 1]].map(([tx, rot, i]) => (
-          <div key={i} style={{
-            position:'absolute', inset:0,
+    <div style={{ width:330, margin:'0 auto' }}>
+      {/* Stack — 330px wide, clips behind cards to exactly 55px (1/4 of 220px) each side */}
+      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'hidden' }}>
+        {/* Behind cards — explicit pixel positioning so exactly 55px shows */}
+        {[{ left:-165, rot:-4, idx:1 }, { right:-165, rot:4, idx:2 }].map(({ left, right, rot, idx }) => (
+          <div key={idx} style={{
+            position:'absolute', width:220,
+            left: left !== undefined ? left : undefined,
+            right: right !== undefined ? right : undefined,
+            top:0, bottom:0,
             borderRadius:20,
-            zIndex:i+1,
-            transform:`translateX(${tx}%) rotate(${rot}deg)`,
+            zIndex:idx,
+            transform:`rotate(${rot}deg)`,
             transformOrigin:'center center',
             border:'1px solid var(--border)',
             background:'var(--bg)',
             overflow:'hidden',
             boxShadow:'0 8px 40px oklch(0% 0 0/0.18)',
           }}>
-            <SidebarCardFace item={WORK[(active + i + 1) % total]} />
-            <div style={{ position:'absolute', inset:0, background:'oklch(5% 0 0/0.55)' }} />
+            <SidebarCardFace item={WORK[(active + idx) % total]} />
+            <div style={{ position:'absolute', inset:0, background:'oklch(5% 0 0/0.52)' }} />
           </div>
         ))}
 
         {/* Leaving card */}
         {leaving !== null && (
           <div style={{
-            position:'absolute', inset:0, zIndex:5,
+            position:'absolute', left:55, top:0, bottom:0, width:220, zIndex:5,
             border:'1px solid var(--border)', borderRadius:20,
             background:'var(--bg)', overflow:'hidden',
             pointerEvents:'none',
@@ -252,7 +255,7 @@ function WorkCardDeck({ onOpenWork }) {
 
         {/* Front / active card */}
         <div key={`card-${active}`} style={{
-          position:'absolute', inset:0, zIndex:4,
+          position:'absolute', left:55, top:0, bottom:0, width:220, zIndex:4,
           border:'1px solid var(--border)', borderRadius:20,
           background:'var(--bg)', overflow:'hidden',
           cursor:'pointer',
@@ -263,7 +266,7 @@ function WorkCardDeck({ onOpenWork }) {
       </div>
 
       {/* Counter + arrows */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px', width:220, margin:'0 auto' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px' }}>
         <button onClick={() => go(-1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
           onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
           onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
@@ -1150,7 +1153,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
             <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
               <span className="dot-pulse" /> Available for hire
             </div>
-            <h1 style={{ fontSize:'clamp(38px, 5.5vw, 60px)', fontWeight:300, lineHeight:1.12, letterSpacing:'-0.025em', marginBottom:10 }}>
+            <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1, marginBottom:10 }}>
               {greeting}
             </h1>
             <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty', marginBottom:24 }}>
@@ -1168,7 +1171,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div style={{ flex:'0 0 480px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+          <div style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
             <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
