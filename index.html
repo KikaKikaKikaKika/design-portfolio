@@ -653,15 +653,15 @@ function Testimonials() {
   const [active, setActive] = useState(0);
   const t = TESTIMONIALS[active];
   return (
-    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)' }}>
+    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)', textAlign:'center' }}>
       <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Kind words</div>
-      <div style={{ maxWidth:640 }}>
+      <div style={{ maxWidth:640, margin:'0 auto' }}>
         <blockquote style={{ fontSize:19, lineHeight:1.78, fontWeight:300, fontStyle:'italic', color:'var(--ink)', textWrap:'pretty', minHeight:120 }}>"{t.text}"</blockquote>
         <div style={{ marginTop:24 }}>
           <div style={{ fontWeight:500, fontSize:14 }}>{t.name}</div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:2 }}>{t.role}</div>
         </div>
-        <div style={{ display:'flex', gap:8, marginTop:24 }}>
+        <div style={{ display:'flex', gap:8, marginTop:24, justifyContent:'center' }}>
           {TESTIMONIALS.map((_,i)=>(
             <button key={i} onClick={()=>setActive(i)} style={{ width:i===active?24:8, height:8, borderRadius:4, background:i===active?'var(--accent)':'var(--border)', border:'none', cursor:'pointer', transition:'all .25s ease', padding:0 }} />
           ))}
@@ -956,46 +956,77 @@ function AboutPage() {
       {/* Header */}
       <div style={{ marginBottom:80 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
-        <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
-          <img
-            src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
-            alt="Kristina Hergottová"
-            style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
-          />
-          <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
-            Kristina Hergottová
-          </h1>
-        </div>
-        <div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56, alignItems:'start' }}>
 
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
-            <span className="dot-pulse" />
-            Available for hire
+          {/* Left: bio */}
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
+              <img
+                src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
+                alt="Kristina Hergottová"
+                style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
+              />
+              <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
+                Kristina Hergottová
+              </h1>
+            </div>
+
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:11, color:'oklch(64% 0.16 145)', border:'1px solid oklch(64% 0.16 145/0.3)', borderRadius:6, padding:'5px 12px', marginBottom:32 }}>
+              <span className="dot-pulse" />
+              Available for hire
+            </div>
+
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
+              In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+            </p>
+
+            <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+              <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
+                onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+              >Get in touch</a>
+              <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, display:'inline-block', transition:'all .2s', fontFamily:'var(--mono)' }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
+              >↓ Resume</a>
+            </div>
           </div>
 
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-            Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
-          </p>
-          <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
-            In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
-          </p>
-
-          <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-            <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
-              onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
-              onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-            >Get in touch</a>
-            <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, display:'inline-block', transition:'all .2s', fontFamily:'var(--mono)' }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
-            >↓ Resume</a>
+          {/* Right: testimonial cards */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12, paddingTop:4 }}>
+            {TESTIMONIALS.map((t, i) => {
+              const initials = t.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+              const snippet = t.text.length > 130 ? t.text.slice(0, 130) + '…' : t.text;
+              const hues = [260, 200, 160, 30, 340, 190];
+              const hue = hues[i % hues.length];
+              return (
+                <div key={i} style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'18px 20px' }}>
+                  <p style={{ fontSize:13, lineHeight:1.65, color:'var(--ink2)', marginBottom:14, fontStyle:'italic' }}>
+                    "{snippet}"
+                  </p>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ width:30, height:30, borderRadius:'50%', background:`oklch(68% 0.14 ${hue})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <span style={{ fontSize:10, fontWeight:700, color:'#fff', letterSpacing:'.03em' }}>{initials}</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:500, color:'var(--ink)', lineHeight:1.3 }}>{t.name}</div>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:1 }}>{t.role}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
         </div>
       </div>
 
