@@ -483,36 +483,53 @@ const WORK = [
   },
 ];
 
-// ── Article Card (mini writing card for work detail) ─────────────────────
-function ArticleCard({ href, title }) {
+// ── External Link Card (Medium / Dribbble) ────────────────────────────────
+function ExternalLinkCard({ href, label, title }) {
   const [hov, setHov] = useState(false);
-  const article = WRITING.find(w => w.href === href);
-  const img = article ? article.img : null;
-  const displayTitle = article ? article.title : title;
-  const category = article ? article.category : 'Article';
-  const readTime = article ? article.readTime : null;
+  const isMedium   = href.includes('medium.com');
+  const isDribbble = href.includes('dribbble.com');
+  const article    = isMedium ? WRITING.find(w => w.href === href) : null;
+  const img        = article ? article.img : null;
+  const displayTitle = article ? article.title : (title || label);
+  const category   = article ? article.category : null;
+  const readTime   = article ? article.readTime : null;
+  const cta        = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : 'View →';
+
+  const PlatformBadge = () => isMedium ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+    </div>
+  ) : isDribbble ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#EA4C89', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.073c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.386z"/></svg>
+    </div>
+  ) : null;
+
   return (
     <a href={href} target="_blank" rel="noopener"
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         display:'grid', gridTemplateColumns: img ? '140px 1fr' : '1fr', gap:20,
-        padding:16, borderRadius:14, border:'1px solid var(--border)',
+        padding:16, paddingRight: 44, borderRadius:14, border:'1px solid var(--border)',
         background: hov ? 'var(--bg2)' : 'var(--bg)',
-        transition:'all .2s ease', textDecoration:'none',
+        transition:'all .2s ease', textDecoration:'none', position:'relative',
         transform: hov ? 'translateY(-2px)' : 'none',
         boxShadow: hov ? '0 8px 28px oklch(0% 0 0/0.07)' : 'none',
       }}>
       {img && <img src={img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />}
       <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
         <div>
-          <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
-            <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
-            {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
-          </div>
+          {category && (
+            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
+              {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
+            </div>
+          )}
           <div style={{ fontSize:13.5, fontWeight:500, lineHeight:1.35, color:'var(--ink)', textWrap:'pretty' }}>{displayTitle}</div>
         </div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginTop:10, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>Read on Medium →</div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginTop:10, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>{cta}</div>
       </div>
+      <PlatformBadge />
     </a>
   );
 }
@@ -548,23 +565,17 @@ function ProjectAccordionItem({ p }) {
           <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
           {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
           {(p.href || p.links) && (
-            <div style={{ marginTop:16 }}>
-              {p.links
-                ? <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
-                    {p.links.map((l,k) => (
-                      <a key={k} href={l.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                        onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                        onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                      >{l.label}</a>
-                    ))}
-                  </div>
-                : p.linkLabel === 'Read article →'
-                  ? <ArticleCard href={p.href} title={p.name} />
-                  : <a href={p.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
+            <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:10 }}>
+              {(p.links || [{ href: p.href, label: p.linkLabel || 'View →' }]).map((l, k) => {
+                const isCard = l.href && (l.href.includes('medium.com') || l.href.includes('dribbble.com'));
+                return isCard
+                  ? <ExternalLinkCard key={k} href={l.href} label={l.label} title={p.name} />
+                  : <a key={k} href={l.href} target="_blank" rel="noopener"
+                      style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s', alignSelf:'flex-start' }}
                       onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
                       onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                    >{p.linkLabel || 'View case study →'}</a>
-              }
+                    >{l.label}</a>;
+              })}
             </div>
           )}
         </div>
