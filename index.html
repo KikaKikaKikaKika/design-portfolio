@@ -209,7 +209,7 @@ function WorkCardDeck({ onOpenWork }) {
   const behindScales = [0.97, 0.94, 0.90];
 
   return (
-    <div style={{ margin:'16px 8px 12px' }}>
+    <div>
       {/* Stack */}
       <div style={{ position:'relative', height:148, marginBottom:12 }}>
         {/* Behind ghost cards */}
@@ -323,8 +323,7 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
             );
           })}
         </nav>
-        <WorkCardDeck onOpenWork={onOpenWork} />
-        <div style={{ marginTop:8, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
+        <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
           <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
           <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
           <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
@@ -1134,7 +1133,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
     <>
       {/* Hero */}
       <section style={{ paddingTop:48, paddingBottom:96 }}>
-        <div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', gap:56, alignItems:'flex-start', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
             <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
               <span className="dot-pulse" /> Available for hire
@@ -1156,6 +1155,10 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
                 onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
               >Say hello</a>
             </div>
+          </div>
+          <div style={{ flex:'0 0 280px', paddingTop:8 }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:14 }}>Selected work</div>
+            <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
       </section>
