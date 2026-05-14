@@ -221,19 +221,29 @@ function WorkCardDeck({ onOpenWork }) {
     <div>
       {/* Stack */}
       <div style={{ position:'relative', height:272, marginBottom:14 }}>
-        {/* Behind ghost cards */}
-        {[2,1,0].map(i => (
-          <div key={i} style={{
-            position:'absolute', inset:0,
-            background: i===2 ? 'var(--bg3)' : i===1 ? 'var(--bg2)' : 'var(--bg2)',
-            border:`1px solid ${i===2?'var(--ink3)':i===1?'var(--border)':'var(--border)'}`,
-            borderRadius:13,
-            zIndex:i+1,
-            transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
-            transformOrigin:'center center',
-            boxShadow: i===2 ? '0 4px 16px oklch(0% 0 0/0.08)' : 'none',
-          }} />
-        ))}
+        {/* Behind cards — show real card previews */}
+        {[2,1,0].map(i => {
+          const cardItem = WORK[(active + i + 1) % total];
+          return (
+            <div key={i} style={{
+              position:'absolute', inset:0,
+              border:'1px solid var(--border)',
+              borderRadius:13,
+              zIndex:i+1,
+              transform:`rotate(${behindRots[i]}deg) scale(${behindScales[i]})`,
+              transformOrigin:'center center',
+              overflow:'hidden',
+              boxShadow:`0 ${(i+1)*4}px ${(i+1)*12}px oklch(0% 0 0/${0.08 + i*0.04})`,
+            }}>
+              <div style={{ height:160, overflow:'hidden', background:'var(--bg3)' }}>
+                <img src={cardItem.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity: 0.55 + i*0.15 }} />
+              </div>
+              <div style={{ background:'var(--bg2)', height:'100%', padding:'12px 14px' }}>
+                <div style={{ fontSize:13, fontWeight:500, color:'var(--ink2)' }}>{cardItem.title}</div>
+              </div>
+            </div>
+          );
+        })}
 
         {/* Leaving card */}
         {leaving !== null && (
@@ -1143,7 +1153,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
     <>
       {/* Hero */}
       <section style={{ paddingTop:48, paddingBottom:96 }}>
-        <div style={{ display:'flex', gap:56, alignItems:'flex-start', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', gap:56, alignItems:'stretch', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
             <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
               <span className="dot-pulse" /> Available for hire
@@ -1166,10 +1176,8 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div style={{ flex:'0 0 360px', display:'flex', alignItems:'flex-end', paddingBottom:2 }}>
-            <div style={{ width:'100%' }}>
-              <WorkCardDeck onOpenWork={onOpenWork} />
-            </div>
+          <div style={{ flex:'0 0 360px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+            <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
       </section>
