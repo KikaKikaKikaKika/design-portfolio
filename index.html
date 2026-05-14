@@ -960,7 +960,6 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
       {/* Testimonials */}
       <Testimonials />
 
-      <Footer />
     </>
   );
 }
@@ -1044,7 +1043,6 @@ function AboutPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }
@@ -1102,7 +1100,6 @@ function WorkPage({ tweaks, onOpenWork }) {
         ))}
       </section>
 
-      <Footer />
     </div>
   );
 }
@@ -1162,7 +1159,6 @@ function WritingPage() {
         })}
       </div>
 
-      <Footer />
     </div>
   );
 }
@@ -1194,7 +1190,6 @@ function ContactPage() {
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:20 }}>hergottovak@gmail.com</div>
       </section>
 
-      <Footer />
     </div>
   );
 }
@@ -1226,6 +1221,7 @@ function App() {
             {activePage === 'contact' && <ContactPage />}
           </div>
 
+          <Footer />
           <ScrollToTop />
         </div>
       </div>
