@@ -218,9 +218,9 @@ function WorkCardDeck({ onOpenWork }) {
   return (
     <div>
       {/* Stack */}
-      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible', padding:'0 80px' }}>
+      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'visible', width:220, margin:'0 auto' }}>
         {/* Behind cards — offset left/right with dark overlay */}
-        {[[-38, -4, 0], [38, 4, 1]].map(([tx, rot, i]) => (
+        {[[-75, -4, 0], [75, 4, 1]].map(([tx, rot, i]) => (
           <div key={i} style={{
             position:'absolute', inset:0,
             borderRadius:20,
@@ -263,7 +263,7 @@ function WorkCardDeck({ onOpenWork }) {
       </div>
 
       {/* Counter + arrows */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px', width:220, margin:'0 auto' }}>
         <button onClick={() => go(-1)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
           onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
           onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
