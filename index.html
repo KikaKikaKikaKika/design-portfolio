@@ -175,15 +175,15 @@ function Counter({ to, suffix = '' }) {
 function SidebarCardFace({ item }) {
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
-      <div style={{ height:68, overflow:'hidden', background:'var(--bg3)', flexShrink:0 }}>
+      <div style={{ height:160, overflow:'hidden', background:'var(--bg3)', flexShrink:0 }}>
         <img src={item.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
       </div>
-      <div style={{ padding:'9px 11px' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--accent)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>
+      <div style={{ padding:'14px 16px' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:6 }}>
           {item.companies?.slice(0,2).join(' · ')}
         </div>
-        <div style={{ fontSize:12.5, fontWeight:500, color:'var(--ink)', lineHeight:1.25 }}>{item.title}</div>
-        <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, lineHeight:1.4 }}>{item.desc?.slice(0,52)}…</div>
+        <div style={{ fontSize:15, fontWeight:500, color:'var(--ink)', lineHeight:1.25 }}>{item.title}</div>
+        <div style={{ fontSize:13, color:'var(--ink3)', marginTop:6, lineHeight:1.5 }}>{item.desc?.slice(0,90)}…</div>
       </div>
     </div>
   );
@@ -195,15 +195,24 @@ function WorkCardDeck({ onOpenWork }) {
   const [dir, setDir] = useState(1);
   const [animated, setAnimated] = useState(false);
   const total = WORK.length;
+  const activeRef = useRef(active);
+  const leavingRef = useRef(leaving);
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { leavingRef.current = leaving; }, [leaving]);
 
   const go = (d) => {
-    if (leaving !== null) return;
+    if (leavingRef.current !== null) return;
     setAnimated(true);
     setDir(d);
-    setLeaving(active);
-    setActive((active + d + total) % total);
+    setLeaving(activeRef.current);
+    setActive((activeRef.current + d + total) % total);
     setTimeout(() => setLeaving(null), 440);
   };
+
+  useEffect(() => {
+    const id = setInterval(() => go(1), 3000);
+    return () => clearInterval(id);
+  }, []);
 
   const behindRots = [2.8, -4.5, 6.2];
   const behindScales = [0.97, 0.94, 0.90];
@@ -211,7 +220,7 @@ function WorkCardDeck({ onOpenWork }) {
   return (
     <div>
       {/* Stack */}
-      <div style={{ position:'relative', height:148, marginBottom:12 }}>
+      <div style={{ position:'relative', height:272, marginBottom:14 }}>
         {/* Behind ghost cards */}
         {[2,1,0].map(i => (
           <div key={i} style={{
@@ -1156,9 +1165,11 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div style={{ flex:'0 0 280px', paddingTop:8 }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:14 }}>Selected work</div>
-            <WorkCardDeck onOpenWork={onOpenWork} />
+          <div style={{ flex:'0 0 360px', paddingTop:8, display:'flex', flexDirection:'column', alignItems:'center' }}>
+            <div style={{ width:'100%' }}>
+              <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:14, textAlign:'center' }}>Selected work</div>
+              <WorkCardDeck onOpenWork={onOpenWork} />
+            </div>
           </div>
         </div>
       </section>
