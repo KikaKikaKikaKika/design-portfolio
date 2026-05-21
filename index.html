@@ -1415,22 +1415,52 @@ function ProcessSection() {
   const steps = [
     { num:'01', title:'Discover', desc:'Understand the problem space through research, observation, and stakeholder engagement before defining any direction.',
       methods:['User interviews','Stakeholder workshops','Contextual inquiry','Desk research','Competitive analysis','Heuristic review'],
-      aiMethods:['AI opportunity mapping','Capability assessment','Ethical scoping','Competitive AI benchmarking'] },
+      aiMethods:['Competitive AI benchmarking','Capability assessment','Ethical scoping','Rapid research synthesis','Scrape or query datasets for desk research','AI opportunity mapping across user journeys'],
+      withAIView:{
+        replaced:['Desk research','Scrape or query datasets for desk research'],
+        augmented:['Competitive analysis','Heuristic review','Rapid research synthesis','Competitive AI benchmarking'],
+        human:['User interviews','Stakeholder workshops','Contextual inquiry','Capability assessment','Ethical scoping','AI opportunity mapping across user journeys'],
+      }},
     { num:'02', title:'Define', desc:'Synthesise findings into a clear problem statement, opportunity framing, and shared understanding of user needs.',
-      methods:['Insight synthesis','How might we','Jobs to be done','Personas','Journey mapping','Problem framing'],
-      aiMethods:['AI use case definition','Human-AI interaction model','Edge case scoping'] },
-    { num:'03', title:'Ideate', desc:'Generate a wide range of ideas before converging on the most promising directions to explore further.',
+      methods:['Insight synthesis','How might we','Jobs to be done','Personas','Journey mapping','Problem framing','PRDs'],
+      aiMethods:['AI use case definition','Human-AI interaction modelling','Edge case scoping','Cluster and theme research findings','Defining eval criteria alongside problem statements'],
+      withAIView:{
+        replaced:['Insight synthesis','Cluster and theme research findings'],
+        augmented:['AI use case definition','Defining eval criteria alongside problem statements','PRDs','Problem framing','Human-AI interaction modelling','Edge case scoping'],
+        human:['Jobs to be done','How might we','Personas','Journey mapping'],
+      }},
+    { num:'03', title:'Ideate', desc:'Generate a wide range of ideas before converging on the most promising directions.',
       methods:['Brainstorming','Design sprints','Concept sketching','Prioritisation','Co-creation workshops','Storyboarding'],
-      aiMethods:['AI-accelerated concept generation','Generative design exploration'] },
-    { num:'04', title:'Prototype', desc:'Build tangible representations of ideas to communicate, explore, and test solutions at the right fidelity.',
+      aiMethods:['Rapidly generate and stress-test concepts','Prompt strategy exploration as part of concept work','Agent behaviour definitions','Mapping model capabilities to experience opportunities'],
+      withAIView:{
+        replaced:['Brainstorming','Rapidly generate and stress-test concepts','Prompt strategy exploration as part of concept work'],
+        augmented:['Concept sketching','Storyboarding','Mapping model capabilities to experience opportunities'],
+        human:['Design sprints','Co-creation workshops','Agent behaviour definitions','Prioritisation'],
+      }},
+    { num:'04', title:'Prototype', desc:'Build tangible representations of ideas to test and communicate at the right fidelity.',
       methods:['Wireframes','Interactive prototypes','Design systems','Service blueprints','Content design','Accessibility review'],
-      aiMethods:['Conversational UX','Adaptive UI patterns','Agent flow mapping'] },
-    { num:'05', title:'Test & Iterate', desc:'Validate solutions with real users, gather evidence, and refine continuously until outcomes meet both user and business goals.',
-      methods:['Usability testing','A/B testing','Benchmarking','Stakeholder review','Data analysis','Iteration planning'],
-      aiMethods:['AI output testing','Trust evaluation','Edge case testing','Bias assessment','Human-in-the-loop review'] },
-    { num:'06', title:'Engineering & System', desc:'Ensure a smooth handoff to engineering, update design system components and documentation, and maintain guidelines so decisions are preserved and scalable.',
-      methods:['Design–dev handoff','Design system updates','Component documentation','Annotation & specs','Guidelines & standards','QA & design review','Writing strategies','PRDs'],
-      aiMethods:['AI pattern library updates','Prompt & tone guidelines','Governance documentation','Design QA for AI outputs'] },
+      aiMethods:['Generate workable prototypes','Generate UI components and patterns','Define skills and hooks','Conversational UX prototyping','Building and test lightweight tools','Shipping actual products and websites'],
+      withAIView:{
+        replaced:['Wireframes','Generate workable prototypes','Generate UI components and patterns','Building and test lightweight tools','Shipping actual products and websites'],
+        augmented:['Interactive prototypes','Content design','Conversational UX prototyping','Define skills and hooks','Design systems','Accessibility review'],
+        human:['Service blueprints'],
+      }},
+    { num:'05', title:'Test & Iterate', desc:'Validate with real users, gather evidence, and refine until outcomes meet user and business goals.',
+      methods:['Usability testing','A/B testing','Benchmarking','Review','Data analysis'],
+      aiMethods:['AI output testing','Bias assessment','Human-in-the-loop review','Analyse test findings and surface patterns','Running structured evals on model behaviour'],
+      withAIView:{
+        replaced:['Data analysis','Analyse test findings and surface patterns','AI output testing'],
+        augmented:['Benchmarking','Running structured evals on model behaviour','Bias assessment'],
+        human:['Usability testing','A/B testing','Review'],
+      }},
+    { num:'06', title:'Deliver', desc:'Smooth handoff to engineering, updated design system components and documentation, decisions preserved and scalable.',
+      methods:['Design–dev handoff','Design system updates','Component documentation','Annotation & specs','Guidelines & standards','QA & design review','PRDs'],
+      aiMethods:['AI pattern library updates','Prompt and tone guidelines','Governance documentation','Generate production-ready components','Skills and hooks documentation'],
+      withAIView:{
+        replaced:['Design system updates','Component documentation','Annotation & specs','AI pattern library updates','Generate production-ready components','Skills and hooks documentation'],
+        augmented:['Design–dev handoff','Prompt and tone guidelines','QA & design review'],
+        human:['Guidelines & standards','Governance documentation'],
+      }},
   ];
 
   const active = steps[activeStep];
@@ -1475,19 +1505,34 @@ function ProcessSection() {
           <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty' }}>{active.desc}</p>
         </div>
         <div>
-          <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>Methods & tools</div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-            {active.methods.map((m,k) => (
-              <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
-            ))}
-            {withAI && active.aiMethods.map((m,k) => (
-              <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'oklch(65% 0.16 55 / 0.08)' }}>{m}</span>
-            ))}
-          </div>
-          {withAI && (
-            <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6 }}>
-              <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'var(--accent)', flexShrink:0 }}></span>
-              <span style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.04em' }}>AI-specific additions</span>
+          {withAI && active.withAIView ? (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {[
+                { key:'replaced', label:'Replaced by AI',
+                  style:{ color:'var(--ink3)', border:'1px solid var(--border)', background:'transparent', textDecoration:'line-through', opacity:0.45 } },
+                { key:'augmented', label:'Augmented',
+                  style:{ color:'var(--accent)', border:'1px solid oklch(65% 0.16 55 / 0.4)', background:'oklch(65% 0.16 55 / 0.06)' } },
+                { key:'human', label:'Human-led',
+                  style:{ color:'var(--ink2)', border:'1px solid var(--border)', background:'var(--bg)' } },
+              ].map(({ key, label, style }) => active.withAIView[key]?.length > 0 && (
+                <div key={key}>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.07em', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                    {active.withAIView[key].map((m,i) => (
+                      <span key={i} style={{ fontFamily:'var(--mono)', fontSize:10, borderRadius:20, padding:'3px 10px', ...style }}>{m}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {active.methods.map((m,k) => (
+                <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
+              ))}
+              {withAI && active.aiMethods.map((m,k) => (
+                <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'oklch(65% 0.16 55 / 0.08)' }}>{m}</span>
+              ))}
             </div>
           )}
         </div>
@@ -1589,17 +1634,6 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
         <ProcessSection />
       </div>
 
-      {/* Experience stats */}
-      <div style={{ paddingTop:48 }}>
-        <ExperienceStats footer={
-          <button onClick={() => { setExpFilter(null); onNavigate('experience'); }}
-            style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', background:'transparent', cursor:'pointer', transition:'all .2s' }}
-            onMouseEnter={e => e.currentTarget.style.background='var(--bg2)'}
-            onMouseLeave={e => e.currentTarget.style.background='transparent'}
-          >View full experience →</button>
-        } />
-      </div>
-
     </div>
   );
 }
@@ -1625,38 +1659,60 @@ function WorkPage({ tweaks, onOpenWork }) {
   );
 }
 
-// ── Experience Stats (animated bars, filterable) ──────────────────────────
-function StatBars({ data, total, onFilter, activeFilter, filterType }) {
-  const [animated, setAnimated] = React.useState(false);
-  React.useEffect(() => { const t = setTimeout(() => setAnimated(true), 60); return () => clearTimeout(t); }, []);
+// ── Experience Stats (floating bubbles, filterable) ───────────────────────
+function StatBubbles({ data, total, onFilter, activeFilter, filterType, groupLabel }) {
+  React.useEffect(() => {
+    if (document.getElementById('bubble-kf')) return;
+    const s = document.createElement('style');
+    s.id = 'bubble-kf';
+    s.textContent = [0,1,2,3,4].map(i =>
+      `@keyframes bfl${i}{0%,100%{transform:translateY(0)}50%{transform:translateY(${-5-i*2}px)}}`
+    ).join('');
+    document.head.appendChild(s);
+  }, []);
+
   const interactive = !!onFilter;
+  const hasActive = interactive && !!activeFilter;
+
+  const SCATTER = [
+    { top:'6%',  left:'2%'  },
+    { top:'42%', left:'20%' },
+    { top:'4%',  left:'42%' },
+    { top:'38%', left:'60%' },
+    { top:'8%',  left:'76%' },
+  ];
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+    <div style={{ position:'relative', height:210, width:'100%' }}>
+      {groupLabel && (
+        <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', pointerEvents:'none', zIndex:0, whiteSpace:'nowrap' }}>{groupLabel}</div>
+      )}
       {data.map((d, i) => {
         const pct = Math.round((d.value / total) * 100);
-        const isActive = interactive && activeFilter?.type === filterType && activeFilter?.value === d.key;
+        const size = 50 + pct * 1.4;
+        const isActive = hasActive && activeFilter.type === filterType && activeFilter.value === d.key;
+        const dimmed = hasActive && !isActive;
+        const pos = SCATTER[i] || { top:`${10 + i*18}%`, left:`${i*18}%` };
         return (
           <div key={i}
             onClick={() => interactive && onFilter(filterType, d.key)}
-            style={{ cursor: interactive ? 'pointer' : 'default', padding:'10px 12px', borderRadius:10,
-              background: isActive ? 'var(--bg3)' : 'transparent',
-              border:`1px solid ${isActive ? 'var(--border)' : 'transparent'}`,
-              transition:'all .18s' }}
-            onMouseEnter={e => { if (interactive && !isActive) e.currentTarget.style.background='var(--bg2)'; }}
-            onMouseLeave={e => { if (interactive && !isActive) e.currentTarget.style.background='transparent'; }}
+            onMouseEnter={e => { if (interactive && !isActive) { e.currentTarget.style.background = d.color + '2e'; e.currentTarget.style.transform = 'scale(1.06)'; }}}
+            onMouseLeave={e => { if (interactive && !isActive) { e.currentTarget.style.background = d.color + '18'; e.currentTarget.style.transform = 'scale(1)'; }}}
+            style={{
+              position:'absolute', top:pos.top, left:pos.left,
+              width: size, height: size, borderRadius:'50%',
+              background: isActive ? d.color + '40' : d.color + '18',
+              outline: isActive ? `2px solid ${d.color}` : '2px solid transparent',
+              outlineOffset: 2,
+              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+              cursor: interactive ? 'pointer' : 'default',
+              animation:`bfl${i} ${3.2 + i * 0.6}s ease-in-out ${i * 0.5}s infinite`,
+              transition:'opacity .2s, background .2s, transform .18s, outline-color .18s',
+              opacity: dimmed ? 0.3 : 1,
+            }}
           >
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:7, height:7, borderRadius:'50%', background:d.color, flexShrink:0 }} />
-                <span style={{ fontSize:13, color: isActive ? 'var(--ink)' : 'var(--ink2)', fontWeight: isActive ? 500 : 400, transition:'color .18s' }}>{d.label}</span>
-              </div>
-              <span style={{ fontSize:11, fontFamily:'var(--mono)', color:'var(--ink3)' }}>{pct}%</span>
-            </div>
-            <div style={{ height:3, background:'var(--bg3)', borderRadius:4, overflow:'hidden' }}>
-              <div style={{ height:'100%', background:d.color, borderRadius:4,
-                width: animated ? `${pct}%` : '0%',
-                transition:`width 0.7s cubic-bezier(.4,0,.2,1) ${i * 0.08}s` }} />
-            </div>
+            <div style={{ fontSize: Math.max(9, size * 0.115), fontWeight:600, color:d.color, textAlign:'center', lineHeight:1.25, padding:'0 6px' }}>{d.label}</div>
+            <div style={{ fontFamily:'var(--mono)', fontSize: Math.max(8, size * 0.095), color:d.color, opacity:0.7 }}>{pct}%</div>
           </div>
         );
       })}
@@ -1680,15 +1736,16 @@ const ROLES_DATA = [
 
 function ExperienceStats({ onFilter, activeFilter, footer }) {
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:48 }}>
-      <div style={{ display:'flex', flexDirection:'column' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Industry</div>
-        <StatBars data={INDUSTRY_DATA} total={6} onFilter={onFilter} activeFilter={activeFilter} filterType="industry" />
+    <div style={{ border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
+      <div style={{ textAlign:'center', padding:'10px 0 0', fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.04em' }}>Use as filter</div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:2 }}>
+      <div style={{ padding:'24px 20px', display:'flex', flexDirection:'column' }}>
+        <StatBubbles data={INDUSTRY_DATA} total={6} onFilter={onFilter} activeFilter={activeFilter} filterType="industry" groupLabel="Industry" />
         {footer && <div style={{ marginTop:16 }}>{footer}</div>}
       </div>
-      <div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Role</div>
-        <StatBars data={ROLES_DATA} total={10} onFilter={onFilter} activeFilter={activeFilter} filterType="role" />
+      <div style={{ padding:'24px 20px', borderLeft:'1px solid var(--border)' }}>
+        <StatBubbles data={ROLES_DATA} total={10} onFilter={onFilter} activeFilter={activeFilter} filterType="role" groupLabel="Role" />
+      </div>
       </div>
     </div>
   );
@@ -1823,21 +1880,9 @@ function ExperiencePage({ expFilter, setExpFilter }) {
         >↓ Download Resume</a>
       </div>
 
-      {/* Filters */}
-      <div style={{ marginBottom:40, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 16px', display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>
-        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Industry</span>
-        {INDUSTRY_DATA.map(d => (
-          <FilterPill key={d.key} label={d.label}
-            active={expFilter?.type === 'industry' && expFilter?.value === d.key}
-            onClick={() => toggle('industry', d.key)} />
-        ))}
-        <div style={{ width:1, height:16, background:'var(--border)', flexShrink:0 }} />
-        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Role</span>
-        {ROLES_DATA.map(d => (
-          <FilterPill key={d.key} label={d.label}
-            active={expFilter?.type === 'role' && expFilter?.value === d.key}
-            onClick={() => toggle('role', d.key)} />
-        ))}
+      {/* Industry & Role bubbles */}
+      <div style={{ marginBottom:40 }}>
+        <ExperienceStats onFilter={toggle} activeFilter={expFilter} />
       </div>
 
       {/* Timeline */}
@@ -1854,7 +1899,7 @@ function ExperiencePage({ expFilter, setExpFilter }) {
       </div>
 
       {/* Previous assignments map */}
-      <div style={{ borderTop:'1px solid var(--border)', paddingTop:48, marginBottom:48 }}>
+      <div style={{ paddingTop:48, marginBottom:48 }}>
         <WorkMap filteredExp={filtered} highlightLocs={highlightLocs} />
       </div>
 
@@ -1979,6 +2024,16 @@ function ContactPage() {
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:20 }}>hergottovak@gmail.com</div>
       </section>
 
+    </div>
+  );
+}
+
+// ── Process Page ─────────────────────────────────────────────────────────
+function ProcessPage() {
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+      <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:40 }}>Process</div>
+      <ProcessSection />
     </div>
   );
 }
