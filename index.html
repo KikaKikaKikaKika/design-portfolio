@@ -10,6 +10,8 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -36,6 +38,11 @@
     .marquee-track:hover { animation-play-state: paused; }
 
     @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+    .map-tooltip { background:oklch(15% 0.012 78); color:oklch(98.2% 0.007 78); border:none; border-radius:6px; padding:3px 8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap; }
+    .map-tooltip::before { display:none; }
+    .leaflet-container { font-family:'DM Sans',sans-serif; }
+    @keyframes pageEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .page-enter { animation: pageEnter 0.28s ease forwards; }
 
     @media (max-width: 600px) {
       .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -43,13 +50,29 @@
       .stats-grid > div:nth-child(5) { border-top: 1px solid var(--border); border-right: none !important; }
       .stats-grid > div:nth-child(3) { border-right: none !important; }
       .work-grid { grid-template-columns: 1fr !important; }
-      .featured-grid { grid-template-columns: 1fr !important; }
-      .featured-grid .featured-img { order: -1; }
+
+      .writing-card { grid-template-columns: 1fr !important; }
     }
     .dot-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:oklch(64% 0.16 145); animation:dot-pulse 2s ease-in-out infinite; }
 
+    .sidebar-panel { transition: transform .3s ease; }
+    @media (max-width: 768px) {
+      .sidebar-layout { margin-left: 0 !important; }
+      .sidebar-panel { transform: translateX(-100%); position:fixed; }
+      .sidebar-panel.open { transform: translateX(0); }
+      .hamburger-btn { display: flex !important; }
+      .work-detail-panel { width: 100vw !important; }
+      .writing-card { grid-template-columns: 1fr !important; }
+    }
+
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes testimonialSlideRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes testimonialSlideLeft  { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
+    @keyframes cardEnter { from { transform: scale(0.91) translateY(14px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes cardLeaveR { from { transform: translateX(0) rotate(0deg); opacity: 1; } to { transform: translateX(115%) rotate(16deg); opacity: 0; } }
+    @keyframes cardLeaveL { from { transform: translateX(0) rotate(0deg); opacity: 1; } to { transform: translateX(-115%) rotate(-16deg); opacity: 0; } }
 
     #tweaks-panel {
       position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--bg);
@@ -153,64 +176,201 @@ function Counter({ to, suffix = '' }) {
   return <span ref={ref}>{v}{suffix}</span>;
 }
 
-// ── Nav ─────────────────────────────────────────────────────────────────
-function Nav({ onWorkClick }) {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', fn);
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
+// ── Sidebar Card Deck ────────────────────────────────────────────────────
+function AvailableBadge() {
   return (
-    <nav style={{
-      position:'fixed', top:0, left:0, right:0, zIndex:100, height:64,
-      padding:'0 max(32px, calc((100vw - 860px)/2))',
-      display:'flex', alignItems:'center', justifyContent:'space-between',
-      background: scrolled ? 'oklch(98.2% 0.007 78 / 0.9)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(14px)' : 'none',
-      borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
-      transition:'all 0.35s ease',
-    }}>
-      <a href="#" style={{ fontFamily:'var(--mono)', fontSize:13, fontWeight:500 }}>~/kristina</a>
-      <div style={{ display:'flex', gap:28, fontFamily:'var(--mono)', fontSize:12, color:'var(--ink2)' }}>
-        {[['Work','#work'],['Services','#process'],['Experience','#experience']].map(([l,h]) => (
-          <a key={l} href={h} style={{ transition:'color .18s' }}
-            onMouseEnter={e=>e.target.style.color='var(--ink)'}
-            onMouseLeave={e=>e.target.style.color='var(--ink2)'}
-          >{l}</a>
-        ))}
-      </div>
-    </nav>
+    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12, color:'oklch(72% 0.14 145)', border:'1px solid oklch(72% 0.14 145/0.45)', borderRadius:20, padding:'5px 12px' }}>
+      <span className="dot-pulse" />
+      <span>Available for hire</span>
+    </div>
   );
 }
 
-// ── Terminal ────────────────────────────────────────────────────────────
-function Terminal() {
+function SidebarCardFace({ item }) {
   return (
-    <div style={{ background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'18px 22px', fontFamily:'var(--mono)', fontSize:12, lineHeight:1.85, maxWidth:330, boxShadow:'0 6px 28px oklch(0% 0 0/0.12)', flexShrink:0 }}>
-      <div style={{ marginTop:4 }}><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
-      <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
-      <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
-      <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
-      <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
-      <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
-        <span className="dot-pulse" />
-        <span style={{ color:'oklch(72% 0.14 145)' }}>available for hire</span>
+    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+      <div style={{ height:160, overflow:'hidden', background:'var(--bg3)', flexShrink:0 }}>
+        <img src={item.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+      </div>
+      <div style={{ padding:'14px 18px 18px' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          {item.companies?.slice(0,2).join(' · ')}
+        </div>
+        <div style={{ fontSize:15, fontWeight:500, color:'var(--ink)', lineHeight:1.3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title}</div>
+        <div style={{ fontSize:13, color:'var(--ink3)', marginTop:6, lineHeight:1.55, display:'-webkit-box', WebkitBoxOrient:'vertical', WebkitLineClamp:2, overflow:'hidden' }}>{item.desc}</div>
       </div>
     </div>
   );
 }
 
-// ── Work data (9 items) ─────────────────────────────────────────────────
+function WorkCardDeck({ onOpenWork }) {
+  const [active, setActive] = useState(0);
+  const total = WORK.length;
+
+  useEffect(() => {
+    const id = setInterval(() => setActive(i => (i + 1) % total), 3000);
+    return () => clearInterval(id);
+  }, [total]);
+
+  // Shortest circular distance from active
+  const offset = (idx) => {
+    let d = ((idx - active) % total + total) % total;
+    if (d > total / 2) d -= total;
+    return d;
+  };
+
+  // card=220px, center at tx=55 (z:3 covers sides)
+  // side cards at 75% scale: visual width=165px
+  // left: tx=-14 → visual 13.5–192.5, visible 13.5–55 = ~41px (25% of 165)
+  // right: tx=124 → visual 151.5–316.5, visible 275–316.5 = ~41px (25% of 165)
+  const tx    = (off) => { if (off === 0) return 55; if (off === -1) return -14; if (off === 1) return 124; return off < 0 ? -250 : 360; };
+  const sc    = (off) => off === 0 ? 1 : 0.75;
+  const rot   = (off) => off === -1 ? -4 : off === 1 ? 4 : 0;
+  const zIdx  = (off) => off === 0 ? 3 : Math.abs(off) === 1 ? 2 : 1;
+  const show  = (off) => Math.abs(off) <= 1;
+
+  return (
+    <div style={{ width:330, margin:'0 auto' }}>
+      <div style={{ position:'relative', height:272, marginBottom:14, overflow:'hidden' }}>
+        {WORK.map((item, idx) => {
+          const off = offset(idx);
+          const isCenter = off === 0;
+          return (
+            <div key={idx} style={{
+              position:'absolute', left:0, top:0, bottom:0, width:220,
+              borderRadius:20,
+              border: isCenter ? '2px solid var(--accent)' : '1px solid var(--border)',
+              background:'var(--bg)',
+              overflow:'hidden',
+              cursor: isCenter ? 'pointer' : 'default',
+              zIndex: zIdx(off),
+              transform: `translateX(${tx(off)}px) scale(${sc(off)}) rotate(${rot(off)}deg)`,
+              transition: 'transform 0.55s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease',
+              boxShadow: isCenter ? '0 8px 32px oklch(0% 0 0/0.16)' : 'none',
+              visibility: show(off) ? 'visible' : 'hidden',
+            }}
+            onClick={() => isCenter && onOpenWork(item)}
+            onMouseEnter={e => { if (isCenter) e.currentTarget.style.boxShadow='0 16px 48px oklch(0% 0 0/0.26)'; }}
+            onMouseLeave={e => { if (isCenter) e.currentTarget.style.boxShadow='0 8px 32px oklch(0% 0 0/0.16)'; }}>
+              <SidebarCardFace item={item} />
+              <div style={{
+                position:'absolute', inset:0,
+                background:'oklch(5% 0 0/0.48)',
+                opacity: isCenter ? 0 : 1,
+                transition:'opacity 0.45s ease',
+                pointerEvents:'none',
+              }} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Counter + arrows */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 2px' }}>
+        <button onClick={() => setActive(i => (i - 1 + total) % total)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
+          onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
+        >←</button>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>
+          {String(active+1).padStart(2,'0')} / {String(total).padStart(2,'0')}
+        </span>
+        <button onClick={() => setActive(i => (i + 1) % total)} style={{ background:'none', border:'none', color:'var(--ink3)', cursor:'pointer', padding:'2px 6px', fontSize:15, lineHeight:1, transition:'color .15s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='var(--ink)'}
+          onMouseLeave={e=>e.currentTarget.style.color='var(--ink3)'}
+        >→</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────
+function Sidebar({ activePage, onNavigate, onOpenWork }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = [
+    { label: 'Home',       page: 'home' },
+    { label: 'About',      page: 'about' },
+    { label: 'Work',       page: 'work' },
+    { label: 'Experience', page: 'experience' },
+    { label: 'Writing',    page: 'writing' },
+    { label: 'Contact',    page: 'contact' },
+  ];
+  const go = (page) => { onNavigate(page); setMobileOpen(false); };
+  return (
+    <>
+      <button className="hamburger-btn" onClick={() => setMobileOpen(!mobileOpen)} style={{
+        display:'none', position:'fixed', top:16, left:16, zIndex:201,
+        background:'var(--bg)', border:'1px solid var(--border)', borderRadius:8,
+        padding:'8px 10px', cursor:'pointer', alignItems:'center', justifyContent:'center',
+        transition:'background .15s',
+      }}
+        onMouseEnter={e => e.currentTarget.style.background='var(--bg2)'}
+        onMouseLeave={e => e.currentTarget.style.background='var(--bg)'}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'oklch(0% 0 0/0.3)', zIndex:99 }} />}
+      <aside className={`sidebar-panel${mobileOpen ? ' open' : ''}`} style={{
+        position:'fixed', left:0, top:0, bottom:0, width:240,
+        background:'var(--bg)', borderRight:'1px solid var(--border)',
+        display:'flex', flexDirection:'column', padding:'28px 16px 24px',
+        zIndex:100, overflowY:'auto',
+      }}>
+        <div style={{ padding:'0 8px', marginBottom:0 }}>
+          <button onClick={() => go('home')} style={{
+            fontFamily:'var(--mono)', fontSize:13, fontWeight:500, display:'block',
+            color:'var(--ink)', background:'none', border:'none', padding:0, cursor:'pointer',
+            textAlign:'left', lineHeight:1.4, transition:'color .15s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color='var(--ink3)'}
+            onMouseLeave={e => e.currentTarget.style.color='var(--ink)'}
+          >~/kristina</button>
+          <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
+        </div>
+        <div style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
+        <nav style={{ flex:1 }}>
+          {navItems.map(item => {
+            const isActive = activePage === item.page;
+            return (
+              <button key={item.page} onClick={() => go(item.page)} style={{
+                display:'block', width:'100%', textAlign:'left',
+                padding:'9px 12px', borderRadius:8, marginBottom:2, fontSize:14,
+                color: isActive ? 'var(--ink)' : 'var(--ink2)',
+                background: isActive ? 'var(--bg2)' : 'transparent',
+                border:'none', cursor:'pointer', transition:'all .15s',
+                fontFamily:'var(--sans)', fontWeight: isActive ? 500 : 400,
+              }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='var(--bg2)'; e.currentTarget.style.color='var(--ink)'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--ink2)'; }}}
+              >{item.label}</button>
+            );
+          })}
+        </nav>
+        <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
+          <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
+          <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
+          <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
+          <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
+          <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
+          <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
+            <span className="dot-pulse" />
+            <span style={{ color:'oklch(72% 0.14 145)' }}>available for hire</span>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+// ── Work data ─────────────────────────────────────────────────────────────
 const WORK = [
   {
     title: 'Strategy',
-    desc: 'Defines product and design strategy in close partnership with founders, translating business objectives into clear product direction.',
+    desc: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
     img: 'https://framerusercontent.com/images/gU19czU7xmbSWMe7VfugeRcY2Ck.jpg',
     accent: '55',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
     detail: {
-      body: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
+      body: 'Establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
       projects: [
         { year:'2025', company:'RAKbank', name:'UX strategy for AI Lab', tags:['Ecosystems'], desc:'Led the strategic definition and shared AI vision for a fragmented, multi-product ecosystem across a bank — aligning contributing product teams around common principles, eliminating duplicated efforts, and establishing scalable foundations for a consistent customer experience.',
           scale: [
@@ -234,7 +394,7 @@ const WORK = [
             { bold:'Accelerated team decision-making', rest:' through shared principles, clear design guidelines, and a defined AI identity.' },
           ],
         },
-        { year:'2023–24', company:'Seqera', name:'Organizational UX Strategy', tags:['UX','OKRs'], desc:'Drove a foundational UX strategy to build organizational design maturity, align fragmented product efforts, and create cohesive end-to-end experiences across channels — moving teams from isolated execution toward holistic experience thinking.',
+        { year:'2023–24', company:'Seqera', name:'UX strategy for whole company', tags:['UX','OKRs'], desc:'Drove a foundational UX strategies for year 2023 and 2024 to build organizational design maturity, align fragmented product efforts, and create cohesive end-to-end experiences across channels — moving teams from isolated execution toward holistic experience thinking.',
           scale: [
             { label:'Centralized', desc:'Cross-channel team spanning product, marketing, CX and docs' },
             { label:'3 objectives', desc:'Maturity, research capacity and design system — 10 key results' },
@@ -267,14 +427,48 @@ const WORK = [
     accent: '200',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
     detail: {
-      body: 'Through research and structured facilitation, Kristina moves teams from ambiguity to action. She uncovers real user needs, aligns them with business goals, and validates solutions with users — so what gets built is both meaningful and right.',
+      body: 'Brings deep, cross-disciplinary expertise spanning user research, service design, UX design, design thinking, and innovation practice. Excels in planning and conducting research, as well as designing and facilitating workshops that turn ambiguity into clear direction through structured collaboration. Grounds decisions in real user needs and business context, aligning stakeholders, shaping solutions, and validating them with users to ensure outcomes are both meaningful and effective.',
       projects: [
-        { name:'Design Sprint', tags:['Remote & In-person'], desc:'Led several short, intensive three-day Google-style Design Sprints — bringing together stakeholders, team members, and end users to quickly explore challenges, generate ideas, build prototypes, and test them with users. Consistently produced validated solutions and actionable insights.' },
-        { name:'Stakeholder Workshops', tags:['Ideation','Alignment'], desc:'Prepares and leads workshops to generate ideas, clarify uncertain questions, identify gaps, and narrow down toward solutions. Especially valuable when working with challenging or diverse stakeholders, helping align perspectives and drive collaborative decision-making.' },
-        { name:'Usability Testing', tags:['Remote & In-person'], desc:'Usability testing is the fastest way to uncover issues with a product — from usability problems to other friction points. Conducted remotely or in person, this is Kristina\'s most frequently used research method.' },
-        { name:'User Interviews', tags:['Discovery'], desc:'Especially valuable when problems and needs are unclear, technology is complex, or users are highly unique. One of the most reliable methods for discovery and insight gathering.' },
-        { name:'Personas, Surveys & Benchmarking', tags:['Research'], desc:'Research-driven persona definition begins every project. Surveys have supported work from branding to feature prioritisation. Benchmarking proved especially valuable in AI identity work — including a comprehensive benchmark of 27 banking products.' },
-        { name:'Data Analytics & Design Audit', tags:['Analytics'], desc:'Funnels and recorded user walkthroughs delivered the greatest analytical value. Design audits establish a shared baseline for stakeholders and result in a prioritised roadmap for improvement.' },
+        { name:'Design Sprint', desc:'Planned and facilitated intensive three-day Google-style Design Sprints — bringing together stakeholders, team members, and end users to rapidly explore complex challenges, generate and prioritise ideas, build focused prototypes, and validate them through real user testing. Each sprint delivered clear, evidence-backed direction for product teams.',
+          cases:[
+            { year:'2023', company:'Seqera', format:'3-day in-person Design Sprint', desc:'Brought together cross-functional stakeholders to align on a complex product challenge, prototype competing solutions, and validate the most promising direction through user testing — resulting in a tested prototype and clear product direction.' },
+            { year:'2021', company:'Siemens Gamesa', format:'3-day online Design Sprint', desc:'Facilitated a fully remote sprint across distributed teams, maintaining collaborative energy and structured output — resulting in a tested prototype and a well-defined path forward for the product team.' },
+          ],
+        },
+        { name:'Stakeholder Workshops', desc:'Prepares and leads workshops to generate ideas, clarify uncertain questions, identify gaps, and narrow down toward solutions. Especially valuable when working with challenging or diverse stakeholders, helping align perspectives and drive collaborative decision-making.',
+          cases:[
+            { year:'2024', company:'Seqera Labs', format:'Stakeholder Workshops', desc:'The most frequently and intensively used tools and practices at Seqera Labs across complex and data-heavy product design and rebranding initiatives.' },
+          ],
+        },
+        { name:'Usability Testing', desc:'Usability testing is the most commonly and regularly used method for uncovering product issues — from usability problems to broader friction points. Since Kristina\'s first UX role, she has brought it into every project and stage of her career, using it consistently to inform decisions and improve outcomes. Conducted remotely or in person, it remains her primary research approach for quickly identifying and validating areas for improvement.' },
+        { name:'User Interviews', desc:'Especially valuable when problems and needs are unclear, technology is complex, or users are highly unique. One of the most reliable methods for discovery and insight gathering.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'User Interviews', desc:'Usability testing was the most commonly used tool, particularly in projects such as the Complaint Mailbox, where it supported process analysis and problem mapping. It also played a key role in the AI branding initiative, helping uncover and understand client perceptions of AI.' },
+          ],
+        },
+        { name:'Personas', desc:'Research-driven persona definition begins every project — grounding design decisions in real user archetypes, needs, and behaviours.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'Personas', desc:'Personas played a key role in mapping the customer support process across the bank, enabling a shared understanding of user roles, needs, and interactions across multiple touchpoints.' },
+            { year:'2023', company:'Seqera Labs', format:'Personas', desc:'Personas were established when entering a complex technical environment, where initial understanding was limited — particularly due to varying roles and permission structures within the product depending on user type.' },
+            { year:'2021', company:'Siemens Gamesa', format:'Personas', desc:'Complex processes and tools required clear user segmentation, with personas used to define and clarify different user types and their needs.' },
+          ],
+        },
+        { name:'Surveys', desc:'Surveys have supported work from branding to feature prioritisation, providing quantitative signal to complement qualitative findings.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'Survey', desc:'Used to explore client perceptions and understanding of AI, identifying key trends, attitudes, and areas of confusion.' },
+          ],
+        },
+        { name:'Benchmarking', desc:'Used to assess industry standards, identify patterns, and establish competitive context for design decisions. Helps define best practices, reveal gaps, and align solutions with user expectations. Often part of broader research strategies that combine multiple methods, such as usability studies.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'AI identity & assistants', desc:'Benchmarking proved especially valuable in shaping AI identity work, including a comprehensive review of 27 banking products to establish competitive context, define interaction patterns, and inform design standards for AI assistants.' },
+          ],
+        },
+        { name:'Data Analytics', desc:'Funnels and recorded user walkthroughs delivered the greatest analytical value — surfacing where users drop off and highlighting friction invisible in qualitative sessions.' },
+        { name:'Design Audit', desc:'Design audits create a shared baseline for stakeholders and translate findings into a prioritised roadmap for improvement, making issues visible and enabling alignment before redesign begins.',
+          cases:[
+            { year:'2022', company:'Seqera Labs', format:'Design Audit', desc:'Conducted an audit and assessment prior to product work to understand the state of the design system, including consistency, content patterns, navigation, and overall usability.' },
+          ],
+        },
       ],
     },
   },
@@ -393,9 +587,7 @@ const WORK = [
       body: 'While Kristina\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
       projects: [
         { year:'2026', company:'Photography portfolio', name:'Kristina Sport Photographer', tags:['Web Design','Branding','AI Development'], desc:'A personal photography portfolio built from scratch — designed and developed using AI-assisted tools. The site showcases work across 10+ sport categories and 5 countries, supports print and digital sales, and presents a published book and exhibition. A proof that design thinking and AI development together can produce polished, production-ready products without a traditional engineering team.',
-          links: [
-            { href:'https://kristinasportphotography.com', label:'Visit website →' },
-          ],
+          links: [{ href:'https://kristinasportphotography.com', label:'Visit website →' }],
         },
         { year:'2022–23', company:'Seqera', name:'Nextflow Summit Website', tags:['Web Design','Branding'], desc:'Led the design of a major event website under a tight three-week deadline, while also creating and evolving the event\'s visual identity each year linked to the parent brand. In 2022, reused legacy components while maintaining a fresh look. In 2023, extended the visual identity for two event locations including stationery and branded materials, while keeping the overall brand cohesive. The result was a fully functional website and a unique, year-specific brand delivered on time.',
           links: [
@@ -439,7 +631,7 @@ const WORK = [
   {
     title: 'AI-native Product Development',
     desc: 'Designing and implementing scalable workflows for product teams.',
-    img: 'processnew.png',
+    img: 'ai-native.png',
     accent: '270',
     companies: ['Freelance'],
     detail: {
@@ -447,6 +639,123 @@ const WORK = [
     },
   },
 ];
+
+// ── External Link Card (Medium / Dribbble) ────────────────────────────────
+function ExternalLinkCard({ href, label, title }) {
+  const [hov, setHov] = useState(false);
+  const isMedium   = href.includes('medium.com');
+  const isDribbble = href.includes('dribbble.com');
+  const article    = isMedium ? WRITING.find(w => w.href === href) : null;
+  const img        = article ? article.img : null;
+  const displayTitle = article ? article.title : (title || label);
+  const category   = article ? article.category : null;
+  const readTime   = article ? article.readTime : null;
+  const cta        = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : 'View →';
+
+  const PlatformBadge = () => isMedium ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+    </div>
+  ) : isDribbble ? (
+    <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#EA4C89', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.073c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.386z"/></svg>
+    </div>
+  ) : null;
+
+  return (
+    <a href={href} target="_blank" rel="noopener"
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        display:'grid', gridTemplateColumns: img ? '140px 1fr' : '1fr', gap:20,
+        padding:16, paddingRight: 44, borderRadius:14,
+        border: hov ? '1px solid var(--ink3)' : '1px solid var(--border)',
+        background: hov ? 'var(--bg2)' : 'var(--bg)',
+        transition:'all .2s ease', textDecoration:'none', position:'relative',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov ? '0 8px 24px oklch(0% 0 0/0.10)' : '0 2px 8px oklch(0% 0 0/0.04)',
+      }}>
+      {img && <img src={img} alt="" style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:8, display:'block' }} />}
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+        <div>
+          {category && (
+            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
+              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
+              {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
+            </div>
+          )}
+          <div style={{ fontSize:13.5, fontWeight:500, lineHeight:1.35, color:'var(--ink)', textWrap:'pretty' }}>{displayTitle}</div>
+        </div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginTop:10, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>{cta}</div>
+      </div>
+      <PlatformBadge />
+    </a>
+  );
+}
+
+// ── Project Accordion Item ───────────────────────────────────────────────
+function ProjectAccordionItem({ p }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      border:'1px solid var(--border)', borderRadius:12,
+      background: open ? 'var(--bg2)' : 'var(--bg)',
+      transition:'background 0.2s ease', overflow:'hidden',
+    }}>
+      {/* Header */}
+      <div onClick={() => setOpen(!open)} style={{ padding:'14px 18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap', flex:1, minWidth:0 }}>
+          {p.featured && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--accent)', color:'white', borderRadius:4, padding:'2px 8px', letterSpacing:'.06em', flexShrink:0 }}>Featured</span>}
+          {p.year && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--bg3)', borderRadius:4, padding:'2px 8px', color:'var(--ink3)', flexShrink:0 }}>{p.year}</span>}
+          {p.company && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', flexShrink:0 }}>{p.company}</span>}
+          <span style={{ fontSize:14, fontWeight:500, color:'var(--ink)' }}>{p.name}</span>
+        </div>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
+          style={{ flexShrink:0, transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease', color:'var(--ink3)' }}>
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {/* Expanded content */}
+      {open && (
+        <div style={{ borderTop:'1px solid var(--border)', padding:'16px 18px 20px' }}>
+          {p.tags && (
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+              {p.tags.map((t,j) => <span key={j} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', border:'1px solid var(--border)', borderRadius:10, padding:'1px 8px' }}>{t}</span>)}
+            </div>
+          )}
+          <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
+          {p.cases && (
+            <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:8 }}>
+              {p.cases.map((c,k) => (
+                <div key={k} style={{ display:'flex', gap:14, padding:'12px 14px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border)' }}>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', flexShrink:0, paddingTop:2, minWidth:32 }}>{c.year}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--ink)', marginBottom:3 }}>{c.company} — {c.format}</div>
+                    <div style={{ fontSize:12.5, color:'var(--ink2)', lineHeight:1.6 }}>{c.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
+          {(p.href || p.links) && (
+            <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:10 }}>
+              {(p.links || [{ href: p.href, label: p.linkLabel || 'View →' }]).map((l, k) => {
+                const isCard = l.href && (l.href.includes('medium.com') || l.href.includes('dribbble.com'));
+                return isCard
+                  ? <ExternalLinkCard key={k} href={l.href} label={l.label} title={p.name} />
+                  : <a key={k} href={l.href} target="_blank" rel="noopener"
+                      style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s', alignSelf:'flex-start' }}
+                      onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
+                      onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+                    >{l.label}</a>;
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Work Detail Overlay ─────────────────────────────────────────────────
 function WorkDetail({ item, onClose }) {
@@ -460,7 +769,7 @@ function WorkDetail({ item, onClose }) {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'flex-end' }}>
       <div onClick={onClose} style={{ position:'absolute', inset:0, background:'oklch(15% 0.012 78 / 0.45)', animation:'fadeIn 0.25s ease' }} />
-      <div style={{ position:'relative', zIndex:1, width:'min(50vw, 100vw)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
+      <div className="work-detail-panel" style={{ position:'relative', zIndex:1, width:'calc(100vw - 240px)', height:'100vh', background:'var(--bg)', overflowY:'auto', animation:'slideIn 0.32s cubic-bezier(0.22,1,0.36,1)', boxShadow:'-24px 0 80px oklch(0% 0 0/0.12)' }}>
         <div style={{ height:320, overflow:'hidden', background:'var(--bg3)' }}>
           <img src={item.img} alt={item.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
         </div>
@@ -474,42 +783,11 @@ function WorkDetail({ item, onClose }) {
           <h2 style={{ fontSize:36, fontWeight:300, letterSpacing:'-0.025em', marginBottom:16, lineHeight:1.1 }}>{item.title}</h2>
           <p style={{ fontSize:15, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty', marginBottom:40, whiteSpace:'pre-line' }}>{item.detail.body}</p>
 
-          {item.detail.projects && item.detail.projects.map((p, i) => (
-            <div key={i} style={{
-              borderTop:'1px solid var(--border)', paddingTop:28, marginTop:28,
-              ...(p.featured ? { background:'var(--bg2)', borderRadius:12, padding:'24px', marginTop:28, border:'1px solid var(--border)' } : {}),
-            }}>
-              <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:10, flexWrap:'wrap', justifyContent:'space-between' }}>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  {p.featured && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--accent)', color:'white', borderRadius:4, padding:'2px 8px', letterSpacing:'.06em' }}>Featured</span>}
-                  {p.year && <span style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--bg3)', borderRadius:4, padding:'2px 8px', color:'var(--ink3)' }}>{p.year}</span>}
-                  {p.company && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)' }}>{p.company}</span>}
-                  {p.tags && p.tags.map((t,j) => <span key={j} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', border:'1px solid var(--border)', borderRadius:10, padding:'1px 8px' }}>{t}</span>)}
-                </div>
-              </div>
-              <h3 style={{ fontSize:16, fontWeight:600, marginBottom:8 }}>{p.name}</h3>
-              <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
-
-              {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
-
-              {(p.href || p.links) && (
-                <div style={{ display:'flex', gap:24, flexWrap:'wrap', marginTop:16 }}>
-                  {p.links
-                    ? p.links.map((l,k) => (
-                        <a key={k} href={l.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                          onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                          onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                        >{l.label}</a>
-                      ))
-                    : <a href={p.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                        onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                        onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                      >{p.linkLabel || 'View case study →'}</a>
-                  }
-                </div>
-              )}
+          {item.detail.projects && (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:8 }}>
+              {item.detail.projects.map((p, i) => <ProjectAccordionItem key={i} p={p} />)}
             </div>
-          ))}
+          )}
 
           {item.detail.points && !item.detail.projects && (
             <>
@@ -620,17 +898,20 @@ function Testimonials() {
   const [active, setActive] = useState(0);
   const t = TESTIMONIALS[active];
   return (
-    <section id="about" style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)' }}>
+    <section style={{ paddingBottom:96, paddingTop:80, borderTop:'1px solid var(--border)', textAlign:'center' }}>
       <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Kind words</div>
-      <div style={{ maxWidth:640 }}>
+      <div style={{ maxWidth:640, margin:'0 auto' }}>
         <blockquote style={{ fontSize:19, lineHeight:1.78, fontWeight:300, fontStyle:'italic', color:'var(--ink)', textWrap:'pretty', minHeight:120 }}>"{t.text}"</blockquote>
         <div style={{ marginTop:24 }}>
           <div style={{ fontWeight:500, fontSize:14 }}>{t.name}</div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:2 }}>{t.role}</div>
         </div>
-        <div style={{ display:'flex', gap:8, marginTop:24 }}>
+        <div style={{ display:'flex', gap:8, marginTop:24, justifyContent:'center' }}>
           {TESTIMONIALS.map((_,i)=>(
-            <button key={i} onClick={()=>setActive(i)} style={{ width:i===active?24:8, height:8, borderRadius:4, background:i===active?'var(--accent)':'var(--border)', border:'none', cursor:'pointer', transition:'all .25s ease', padding:0 }} />
+            <button key={i} onClick={()=>setActive(i)} style={{ width:i===active?24:8, height:8, borderRadius:4, background:i===active?'var(--accent)':'var(--border)', border:'none', cursor:'pointer', transition:'all .25s ease', padding:0 }}
+              onMouseEnter={e => { if (i!==active) e.currentTarget.style.background='var(--ink3)'; }}
+              onMouseLeave={e => { if (i!==active) e.currentTarget.style.background='var(--border)'; }}
+            />
           ))}
         </div>
       </div>
@@ -657,21 +938,149 @@ function Marquee() {
 
 // ── Experience data ─────────────────────────────────────────────────────
 const EXP = [
-  { role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide' },
-  { role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE' },
-  { role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain' },
-  { role:'Design Leader & Manager', co:'Seqera', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain' },
-  { role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain' },
-  { role:'Mentor', co:'ADPList', period:'2021–ongoing', tags:'Design · Freelance · Remote' },
-  { role:'Product Designer & Researcher', co:'WorkJam & Peerio', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada' },
-  { role:'UX Designer & Researcher', co:'Greyson & Erstebank', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic' },
+  {
+    role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide', roleTag:'lead', worldwide:true,
+    desc:'Contribute to AI-driven product development, scalable design systems, and end-to-end product operations that enable efficient, high-quality delivery at scale for various clients.',
+    points:[
+      'Builds and optimizes collaborative, cross-functional workflows that connect product, design, brand, research, and content teams.',
+      'Drives creative production pipelines across video, image, illustration, and motion, ensuring consistency and scalability.',
+      'Defines and evolves AI-native product development lifecycles spanning ideation, research, design, content generation, testing, and iteration.',
+    ],
+  },
+  {
+    role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE', industryTag:'finance', roleTag:'lead', locs:['dubai'],
+    desc:'Led design strategy and operations in an AI-native environment, defining how teams build and ship AI-powered products.',
+    points:[
+      'Defined AI-native product and design strategy, including orchestration of AI agents across workflows',
+      'Led end-to-end product design from research to delivery of AI-enabled experiences',
+      'Built and scaled design operations, systems, and collaboration workflows',
+      'Ran user research and workshops to validate opportunities and align stakeholders',
+      'Developed service blueprints and journey maps for AI-driven product opportunities',
+      'Prototyped and iterated on AI-based experiences with emerging tools',
+      'Partnered with engineering, product, and AI teams to deliver scalable solutions',
+    ],
+  },
+  {
+    role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain', industryTag:'legaltech', roleTag:'lead', locs:['vigo'],
+    desc:'Founded and led an early-stage startup from concept to market-ready product.',
+    points:[
+      'Built MVP using Webflow',
+      'Owned product strategy, roadmap, and execution',
+      'Led UX research and iterated using user feedback and product data',
+      'Managed contractors across design and development',
+      'Defined brand, UX, and end-to-end product experience',
+      'Oversaw operations, budgeting, and delivery',
+    ],
+  },
+  {
+    role:'Design Leader & Manager', co:'Seqera', badge:'most challenging role', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain', industryTag:'biotech', roleTag:'lead', locs:['barcelona'],
+    desc:'Led end-to-end experience across product, brand, and marketing during hypergrowth.',
+    points:[
+      'Defined UX strategy, design systems, and experience vision',
+      'Built design operations, tools, and scalable workflows',
+      'Led UX research, content design, and UX writing',
+      'Owned design system and led full brand redesign',
+      'Designed digital and event experiences across EU and US',
+      'Facilitated cross-functional workshops with executive stakeholders',
+      'Contributed hands-on to product and feature design',
+    ],
+  },
+  {
+    role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain', industryTag:'renewables', roleTag:'lead', locs:['bilbao','hamburg'],
+    desc:'Led UX strategy and product design across multiple digital platforms.',
+    points:[
+      'Owned UX strategy across web-based product suite',
+      'Led IA, UX, UI, and research from concept to delivery',
+      'Applied service design to optimize acquisition and sales funnels',
+      'Built and evolved design systems for scalability',
+      'Managed and mentored design team',
+      'Facilitated Design Sprints and alignment workshops',
+    ],
+  },
+  { role:'Mentor', co:'ADPList', period:'2021–2025', tags:'Design · Freelance · Remote', roleTag:'mentor', worldwide:true },
+  {
+    role:'Product Designer & Researcher', co:'WorkJam & Peerio', badge:'favourite company', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada', industryTag:'communication', roleTag:'designer', locs:['montreal'],
+    desc:'Designed UX for workforce collaboration and secure communication tools across two companies.',
+    points:[
+      'Designed UX/UI for workforce management platform at WorkJam',
+      'Translated user needs into product features with cross-functional teams',
+      'Led brand unification efforts',
+      'Designed UX/UI for secure messaging and file-sharing platform at Peerio',
+      'Led UX research',
+      'Supported design system and visual identity',
+    ],
+  },
+  {
+    role:'Founder of Design Agency & UX/UI Designer', co:'Volve Design', period:'2017–2018', tags:'Freelance · Worldwide', roleTag:'designer', locs:['sofia','toronto'],
+    desc:'Established design agency supporting early-stage startups with UX/UI design and research across different product stages.',
+    points:[
+      'Designed and delivered websites for Opentrades (USA), focusing on usability, visual hierarchy, and UI consistency.',
+      'Conducted user research and created user journeys and user flows for Dianurse (Bulgaria), a pre-MVP healthcare startup.',
+      'Led UX research and product design for Swiggle (Canada), an early-stage startup, helping define core product flows and overall product structure.',
+      'General focus: supporting early-stage startups in validating ideas, improving user experience, and shaping product direction through research-driven UX design.',
+    ],
+  },
+  {
+    role:'UX Designer & Researcher', co:'Greyson & Erstebank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic', industryTag:'finance', roleTag:'designer', locs:['prague'],
+    points:[
+      'UX and business analysis for internet banking systems',
+      'UX design for identity verification apps',
+      'UX/UI design for corporate web platforms',
+    ],
+  },
+  {
+    role:'Intern', co:'Slovak Liaison Office for Research and Development', period:'2014', tags:'Paid internship · Belgium', locs:['brussels'], roleTag:'other',
+    desc:'Completed an internship supporting administrative, communication, and coordination activities within a research and development liaison office.',
+    points:[
+      'Managed and updated the office website, ensuring content accuracy and clarity.',
+      'Prepared agendas and supporting materials for internal and external meetings.',
+      'Assisted in organizing and participating in networking and stakeholder engagement events.',
+    ],
+  },
 ];
 
+// ── Writing data ─────────────────────────────────────────────────────────
 const WRITING = [
-  { title:'1-on-1 meetings that actually work', href:'https://medium.com/@kh.uxer/transforming-1-on-1-meetings-into-positive-and-impactful-experiences-c9adcca34c75', img:'https://framerusercontent.com/images/xq8SwQXGUoWNlL98s9SQ3UCMEw.jpg' },
-  { title:'Remote DesignOps for small teams', href:'https://medium.com/@kh.uxer/a-deep-dive-into-day-to-days-operations-tailored-to-small-remote-ux-teams-e96a695286f8', img:'https://framerusercontent.com/images/QRgcK073Ps3VXfWARVmP0PluO3g.png' },
-  { title:'Building a content style guide from scratch', href:'https://medium.com/@kh.uxer/how-to-build-a-content-style-guide-from-scratch-dce1b78aefc6', img:'https://framerusercontent.com/images/HuCjKVzDSZq9AaBrSEmc8UEQ0c.jpg' },
-  { title:'A guide to effective design feedback', href:'https://medium.com/@kh.uxer/a-guide-to-effective-design-feedback-0db6779ebff4', img:'https://framerusercontent.com/images/WPmLus9sEUlyFpd2GBQJjnbNXzY.jpg' },
+  {
+    title: 'AI-native product development requires a complete shift',
+    href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
+    img: 'writing-ai-native.png',
+    excerpt: 'What it actually means to design for AI — strategy, frameworks, and the mindset shift needed to build products that are genuinely powered by intelligence, not just decorated with it.',
+    category: 'AI & Product',
+    readTime: '8 min',
+  },
+  {
+    title: '1-on-1 meetings that actually work',
+    href: 'https://medium.com/@kh.uxer/transforming-1-on-1-meetings-into-positive-and-impactful-experiences-c9adcca34c75',
+    img: 'https://framerusercontent.com/images/xq8SwQXGUoWNlL98s9SQ3UCMEw.jpg',
+    excerpt: 'Transform routine status updates into genuine conversations that build trust, surface challenges early, and create real growth for both manager and team member.',
+    category: 'Leadership',
+    readTime: '5 min',
+  },
+  {
+    title: 'Remote DesignOps for small teams',
+    href: 'https://medium.com/@kh.uxer/a-deep-dive-into-day-to-days-operations-tailored-to-small-remote-ux-teams-e96a695286f8',
+    img: 'https://framerusercontent.com/images/QRgcK073Ps3VXfWARVmP0PluO3g.png',
+    excerpt: 'Practical frameworks, tools, and operating rhythms for small remote UX teams — from async communication patterns to design reviews and the rituals that keep distributed work coherent.',
+    category: 'DesignOps',
+    readTime: '7 min',
+  },
+  {
+    title: 'Building a content style guide from scratch',
+    href: 'https://medium.com/@kh.uxer/how-to-build-a-content-style-guide-from-scratch-dce1b78aefc6',
+    img: 'https://framerusercontent.com/images/HuCjKVzDSZq9AaBrSEmc8UEQ0c.jpg',
+    excerpt: 'How to create a practical, scalable content system that unifies product, marketing, and design teams around one shared voice — and keeps generating value as the company grows.',
+    category: 'Content Design',
+    readTime: '6 min',
+  },
+  {
+    title: 'A guide to effective design feedback',
+    href: 'https://medium.com/@kh.uxer/a-guide-to-effective-design-feedback-0db6779ebff4',
+    img: 'https://framerusercontent.com/images/WPmLus9sEUlyFpd2GBQJjnbNXzY.jpg',
+    excerpt: 'Making design feedback objective, constructive, and actionable — building a culture where critique strengthens the work and the team, rather than creating friction.',
+    category: 'Design Process',
+    readTime: '4 min',
+  },
 ];
 
 // ── AI Lab detail item ──────────────────────────────────────────────────
@@ -714,7 +1123,10 @@ function ProjectTabs({ scale, pillars, methods, outcomes }) {
             color: active === t.key ? 'var(--ink)' : 'var(--ink3)',
             borderBottom: active === t.key ? '2px solid var(--ink)' : '2px solid transparent',
             marginBottom:-1, transition:'color .15s',
-          }}>{t.label}</button>
+          }}
+            onMouseEnter={e => { if (active !== t.key) e.currentTarget.style.color='var(--ink2)'; }}
+            onMouseLeave={e => { if (active !== t.key) e.currentTarget.style.color='var(--ink3)'; }}
+          >{t.label}</button>
         ))}
       </div>
 
@@ -762,51 +1174,96 @@ function ProjectTabs({ scale, pillars, methods, outcomes }) {
   );
 }
 
-// ── App ─────────────────────────────────────────────────────────────────
-function App() {
-  const tweaks = useTweaks();
-  const greeting = getGreeting(tweaks.greeting);
-  const [openItem, setOpenItem] = useState(null);
-
+// ── ScrollToTop ──────────────────────────────────────────────────────────
+function ScrollToTop() {
+  const [visible, setVisible] = React.useState(false);
+  React.useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 300);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   return (
-    <div style={{ maxWidth:860, margin:'0 auto', padding:'0 32px' }}>
-      <Nav />
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      style={{
+        position: 'fixed', bottom: 32, right: 32,
+        width: 44, height: 44, borderRadius: '50%',
+        background: 'var(--ink)', color: 'var(--bg)',
+        border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+        transition: 'opacity .25s, transform .15s ease',
+        zIndex: 999,
+      }}
+      onMouseEnter={e => e.currentTarget.style.transform='scale(1.1)'}
+      onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
+      aria-label="Back to top"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
+  );
+}
 
-      {/* ── Detail Overlay ── */}
-      {openItem && <WorkDetail item={openItem} onClose={()=>setOpenItem(null)} />}
+// ── Footer ───────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer style={{ borderTop:'1px solid var(--border)', padding:'16px 40px', display:'flex', justifyContent:'center', alignItems:'center', flexWrap:'wrap', gap:24, background:'var(--bg2)' }}>
+      <div style={{ display:'flex', gap:24, flexWrap:'wrap', justifyContent:'center' }}>
+        {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
+          <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
+            onMouseEnter={e=>e.target.style.color='var(--ink)'}
+            onMouseLeave={e=>e.target.style.color='var(--ink3)'}
+          >{l}</a>
+        ))}
+      </div>
+    </footer>
+  );
+}
 
-      {/* ── Hero ── */}
-      <section style={{ paddingTop:148, paddingBottom:96 }}>
-        <div style={{ display:'flex', gap:40, alignItems:'flex-start', flexWrap:'wrap' }}>
+// ════════════════════════════════════════════════════════════════════════
+// ── PAGE COMPONENTS ─────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+
+// ── Home Page ────────────────────────────────────────────────────────────
+function HomePage({ tweaks, onNavigate, onOpenWork }) {
+  const greeting = getGreeting(tweaks.greeting);
+  return (
+    <>
+      {/* Hero */}
+      <section style={{ paddingTop:48, paddingBottom:96 }}>
+        <div style={{ display:'flex', gap:56, alignItems:'stretch', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:28, display:'flex', alignItems:'center', gap:8 }}>
-              <span className="dot-pulse" /> Available for hire
+            <div style={{ marginBottom:28 }}>
+              <AvailableBadge />
             </div>
-            <h1 style={{ fontSize:'clamp(38px, 5.5vw, 60px)', fontWeight:300, lineHeight:1.12, letterSpacing:'-0.025em', marginBottom:10 }}>
+            <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1, marginBottom:10 }}>
               {greeting}
             </h1>
-            <h2 style={{ fontSize:'clamp(14px, 2vw, 17px)', fontWeight:400, color:'var(--ink2)', marginBottom:24, letterSpacing:'-0.01em' }}>
-              Design Leader who builds <span style={{ color:'var(--ink)', fontWeight:500 }}>teams</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>systems</span> + <span style={{ color:'var(--ink)', fontWeight:500 }}>products</span>
-            </h2>
-            <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty' }}>
-              Since 2015, I've helped startups and global brands turn big ideas into real-world results. I lead design from start to finish — not just setting the vision, but handling the research, strategy, and execution needed to get there.
+            <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty', marginBottom:24 }}>
+              Welcome to my portfolio, showcasing the work I've been doing since 2015. I've helped startups and global brands turn ambitious ideas into real-world outcomes.<br/><br/>
+              I lead design from end to end—shaping vision, driving research and strategy, and overseeing execution to ensure ideas become impactful, usable products.
             </p>
             <div style={{ marginTop:32, display:'flex', gap:12, flexWrap:'wrap' }}>
-              <a href="#work" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, transition:'opacity .2s' }}
+              <button onClick={() => onNavigate('work')} style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, border:'none', cursor:'pointer', transition:'opacity .2s' }}
                 onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
                 onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-              >View my work</a>
-              <a href="mailto:hergottovak@gmail.com" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, transition:'all .2s' }}
+              >View my work</button>
+              <a href="mailto:hergottovak@gmail.com" style={{ border:'1px solid var(--border)', color:'var(--ink2)', padding:'10px 24px', borderRadius:8, fontSize:14, transition:'all .2s', display:'inline-block' }}
                 onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--ink3)';e.currentTarget.style.color='var(--ink)'}}
                 onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--ink2)'}}
               >Say hello</a>
             </div>
           </div>
-          <Terminal />
+          <div style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+            <WorkCardDeck onOpenWork={onOpenWork} />
+          </div>
         </div>
       </section>
 
-      {/* ── Stats (5 cols) ── */}
+      {/* Stats */}
       <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', marginBottom:96 }}>
         {[
           { to:10, s:'+', l:'Years in product', sub:'2015 → Now' },
@@ -815,7 +1272,7 @@ function App() {
           { to:3,  s:'',  l:'Teams built',       sub:'From 0 to scale' },
           { to:1,  s:'',  l:'AI Lab led',        sub:'RAKbank · 2025' },
         ].map((s,i)=>(
-          <div key={i} style={{ padding:'24px 20px', borderRight:i<4?'1px solid var(--border)':'none', background:i===2?'var(--bg2)':'transparent' }}>
+          <div key={i} style={{ padding:'24px 20px', borderRight:i<4?'1px solid var(--border)':'none', background:'transparent' }}>
             <div style={{ fontSize:34, fontWeight:300, letterSpacing:'-0.03em', lineHeight:1 }}>
               <Counter to={s.to} suffix={s.s} />
             </div>
@@ -825,66 +1282,284 @@ function App() {
         ))}
       </div>
 
-      {/* ── Work (9 items) ── */}
-      <section id="work" style={{ paddingBottom:96 }}>
-        <div style={{ marginBottom:40 }}>
-          <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Work</div>
-        </div>
-        {tweaks.layout === 'list' ? (
-          <div>{WORK.map((item,i)=><WorkListItem key={i} item={item} onOpen={setOpenItem}/>)}</div>
-        ) : (
-          <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
-            {WORK.map((item,i)=><WorkCard key={i} item={item} onOpen={setOpenItem}/>)}
-          </div>
-        )}
-      </section>
-
-      {/* ── Marquee ── */}
+      {/* Marquee */}
       <Marquee />
 
-      {/* ── Testimonials ── */}
+      {/* Testimonials */}
       <Testimonials />
 
-      {/* ── AI Lab Featured Section ── */}
-      <section style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          Featured
-        </div>
-        <div className="featured-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:40, alignItems:'center' }}>
-          <div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--accent)', marginBottom:12, letterSpacing:'.06em' }}>
-              Design Lead at AI Lab · RAKbank · 2025
-            </div>
-            <h2 style={{ fontSize:'clamp(24px, 3.5vw, 36px)', fontWeight:300, letterSpacing:'-0.02em', lineHeight:1.2, marginBottom:20 }}>
-              Working in an AI lab isn't only about using AI. It's about{' '}
-              <span style={{ fontStyle:'italic' }}>building products empowered by it.</span>
-            </h2>
-            <p style={{ fontSize:15, color:'var(--ink2)', lineHeight:1.78, textWrap:'pretty', marginBottom:20 }}>
-              As AI Lab Design Lead at RAKbank, Kristina defined what AI-empowered design means in practice — establishing the strategy, setting the direction, and creating the frameworks teams need to operate in an entirely new paradigm.
-            </p>
-            <p style={{ fontSize:15, color:'var(--ink2)', lineHeight:1.78, textWrap:'pretty', marginBottom:32 }}>
-              She built the design practice inside the lab from the ground up, bridging the gap between AI engineering capabilities and the human experiences that make them meaningful.
-            </p>
-            <button onClick={()=>setOpenItem(AI_LAB_ITEM)}
-              style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', background:'none', border:'none', padding:0, display:'inline-flex', alignItems:'center', gap:6, borderBottom:'1px solid var(--accent)', paddingBottom:2, cursor:'pointer', transition:'opacity .2s' }}
-              onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-              onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-            >Read more →</button>
-          </div>
-          <div className="featured-img" style={{ borderRadius:16, overflow:'hidden', background:'var(--bg3)', aspectRatio:'4/3' }}>
-            <img
-              src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
-              alt="Design Lead at AI Lab"
-              style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 10%' }}
-            />
-          </div>
-        </div>
-      </section>
+    </>
+  );
+}
 
-      {/* ── How I Work (6 items) ── */}
-      <section id="process" style={{ paddingBottom:96 }}>
+// ── About Testimonial Carousel ─────────────────────────────────────────────
+function AboutTestimonials() {
+  const [active, setActive] = useState(0);
+  const [dir, setDir] = useState(1);
+  const hues = [260, 200, 160, 30, 340, 190];
+  const go = (d) => { setDir(d); setActive(i => (i + d + TESTIMONIALS.length) % TESTIMONIALS.length); };
+  const t = TESTIMONIALS[active];
+  const initials = t.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+  const hue = hues[active % hues.length];
+  return (
+    <div style={{ paddingTop:4 }}>
+      <div key={active} style={{
+        background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'24px 22px',
+        animation:`${dir > 0 ? 'testimonialSlideRight' : 'testimonialSlideLeft'} 0.55s ease forwards`
+      }}>
+        <p style={{ fontSize:13.5, lineHeight:1.75, color:'var(--ink2)', marginBottom:20, fontStyle:'italic' }}>
+          "{t.text}"
+        </p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', background:`oklch(68% 0.14 ${hue})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <span style={{ fontSize:10, fontWeight:700, color:'#fff', letterSpacing:'.03em' }}>{initials}</span>
+          </div>
+          <div>
+            <div style={{ fontSize:12, fontWeight:500, color:'var(--ink)', lineHeight:1.3 }}>{t.name}</div>
+            <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:1 }}>{t.role}</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:14 }}>
+        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+          {TESTIMONIALS.map((_,i) => (
+            <button key={i} onClick={() => go(i > active ? 1 : -1)} style={{ width:i===active?20:6, height:6, borderRadius:3, background:i===active?'var(--accent)':'var(--border)', border:'none', padding:0, cursor:'pointer', transition:'all 0.4s ease' }} />
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={() => go(-1)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'var(--ink2)', transition:'all .2s', padding:0 }}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--bg2)';e.currentTarget.style.color='var(--ink)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg)';e.currentTarget.style.color='var(--ink2)'}}
+          >←</button>
+          <button onClick={() => go(1)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'var(--ink2)', transition:'all .2s', padding:0 }}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--bg2)';e.currentTarget.style.color='var(--ink)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg)';e.currentTarget.style.color='var(--ink2)'}}
+          >→</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Work Map ──────────────────────────────────────────────────────────────
+const ALL_MAP_LOCATIONS = [
+  { key:'montreal',  name:'Montreal',  coords:[45.5017, -73.5673] },
+  { key:'prague',    name:'Prague',    coords:[50.0755,  14.4378] },
+  { key:'barcelona', name:'Barcelona', coords:[41.3851,   2.1734] },
+  { key:'bilbao',    name:'Bilbao',    coords:[43.2630,  -2.9350] },
+  { key:'dubai',     name:'Dubai',     coords:[25.2048,  55.2708] },
+  { key:'vigo',      name:'Vigo',      coords:[42.2314,  -8.7124] },
+  { key:'sofia',     name:'Sofia',     coords:[42.6977,  23.3219] },
+  { key:'hamburg',   name:'Hamburg',   coords:[53.5511,   9.9937] },
+  { key:'brussels',  name:'Brussels',  coords:[50.8503,   4.3517] },
+  { key:'toronto',   name:'Toronto',   coords:[43.6532, -79.3832] },
+];
+
+function WorkMap({ filteredExp, highlightLocs }) {
+  const containerRef = React.useRef(null);
+  const mapRef = React.useRef(null);
+  const markersRef = React.useRef([]);
+
+  const makeIcon = (highlighted, dimmed) => L.divIcon({
+    className: '',
+    html: highlighted
+      ? `<div style="width:14px;height:14px;border-radius:50%;background:oklch(65% 0.16 55);border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,.4)"></div>`
+      : `<div style="width:10px;height:10px;border-radius:50%;background:oklch(65% 0.16 55);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:${dimmed ? 0.25 : 1}"></div>`,
+    iconSize: highlighted ? [14, 14] : [10, 10],
+    iconAnchor: highlighted ? [7, 7] : [5, 5],
+  });
+
+  // Init map once
+  React.useEffect(() => {
+    if (mapRef.current || !containerRef.current) return;
+    const map = L.map(containerRef.current, {
+      center: [42, 8], zoom: 3,
+      zoomControl: false, scrollWheelZoom: false,
+      attributionControl: false, dragging: false,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    mapRef.current = map;
+  }, []);
+
+  // Update markers when filter or highlight changes
+  React.useEffect(() => {
+    if (!mapRef.current) return;
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    const showAll = !filteredExp || filteredExp.some(e => e.worldwide);
+    const visibleKeys = showAll ? null : new Set(filteredExp.flatMap(e => e.locs || []));
+    const toShow = showAll ? ALL_MAP_LOCATIONS : ALL_MAP_LOCATIONS.filter(l => visibleKeys.has(l.key));
+    const hasHighlight = highlightLocs && highlightLocs.length > 0;
+
+    toShow.forEach(loc => {
+      const isHighlighted = hasHighlight && highlightLocs.includes(loc.key);
+      const isDimmed = hasHighlight && !isHighlighted;
+      const icon = makeIcon(isHighlighted, isDimmed);
+      const m = L.marker(loc.coords, { icon })
+        .addTo(mapRef.current)
+        .bindTooltip(loc.name, { permanent: isHighlighted || !hasHighlight, direction:'top', offset:[0, isHighlighted ? -12 : -10], className:'map-tooltip' })
+        .openTooltip();
+      markersRef.current.push(m);
+    });
+  }, [filteredExp, highlightLocs]);
+
+  return <div ref={containerRef} style={{ width:'100%', height:340, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)' }} />;
+}
+
+// ── Process Section ───────────────────────────────────────────────────────
+function ProcessSection() {
+  const [withAI, setWithAI] = React.useState(false);
+  const [activeStep, setActiveStep] = React.useState(0);
+
+  const steps = [
+    { num:'01', title:'Discover', desc:'Understand the problem space through research, observation, and stakeholder engagement before defining any direction.',
+      methods:['User interviews','Stakeholder workshops','Contextual inquiry','Desk research','Competitive analysis','Heuristic review'],
+      aiMethods:['AI opportunity mapping','Capability assessment','Ethical scoping','Competitive AI benchmarking'] },
+    { num:'02', title:'Define', desc:'Synthesise findings into a clear problem statement, opportunity framing, and shared understanding of user needs.',
+      methods:['Insight synthesis','How might we','Jobs to be done','Personas','Journey mapping','Problem framing'],
+      aiMethods:['AI use case definition','Human-AI interaction model','Edge case scoping'] },
+    { num:'03', title:'Ideate', desc:'Generate a wide range of ideas before converging on the most promising directions to explore further.',
+      methods:['Brainstorming','Design sprints','Concept sketching','Prioritisation','Co-creation workshops','Storyboarding'],
+      aiMethods:['AI-accelerated concept generation','Generative design exploration'] },
+    { num:'04', title:'Prototype', desc:'Build tangible representations of ideas to communicate, explore, and test solutions at the right fidelity.',
+      methods:['Wireframes','Interactive prototypes','Design systems','Service blueprints','Content design','Accessibility review'],
+      aiMethods:['Conversational UX','Adaptive UI patterns','Agent flow mapping'] },
+    { num:'05', title:'Test & Iterate', desc:'Validate solutions with real users, gather evidence, and refine continuously until outcomes meet both user and business goals.',
+      methods:['Usability testing','A/B testing','Benchmarking','Stakeholder review','Data analysis','Iteration planning'],
+      aiMethods:['AI output testing','Trust evaluation','Edge case testing','Bias assessment','Human-in-the-loop review'] },
+    { num:'06', title:'Engineering & System', desc:'Ensure a smooth handoff to engineering, update design system components and documentation, and maintain guidelines so decisions are preserved and scalable.',
+      methods:['Design–dev handoff','Design system updates','Component documentation','Annotation & specs','Guidelines & standards','QA & design review','Writing strategies','PRDs'],
+      aiMethods:['AI pattern library updates','Prompt & tone guidelines','Governance documentation','Design QA for AI outputs'] },
+  ];
+
+  const active = steps[activeStep];
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Process</div>
+        <div onClick={() => setWithAI(v => !v)} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+          <div style={{ position:'relative', width:36, height:20, borderRadius:10, background: withAI ? 'var(--accent)' : 'var(--border)', transition:'background .2s', flexShrink:0 }}>
+            <div style={{ position:'absolute', top:3, left: withAI ? 19 : 3, width:14, height:14, borderRadius:'50%', background:'white', boxShadow:'0 1px 4px rgba(0,0,0,.2)', transition:'left .2s' }} />
+          </div>
+          <span style={{ fontFamily:'var(--mono)', fontSize:11, color: withAI ? 'var(--accent)' : 'var(--ink3)', letterSpacing:'.04em', transition:'color .2s' }}>With AI</span>
+        </div>
+      </div>
+
+      {/* Step tabs */}
+      <div style={{ display:'flex', alignItems:'stretch', border:'1px solid var(--border)', borderRadius:'14px 14px 0 0', overflow:'hidden', borderBottom:'none' }}>
+        {steps.map((step, i) => (
+          <React.Fragment key={i}>
+            <div onClick={() => setActiveStep(i)} style={{
+              flex:1, cursor:'pointer', padding:'20px 14px', textAlign:'center',
+              background: activeStep === i ? 'var(--ink)' : 'transparent',
+              transition:'all .18s',
+            }}
+              onMouseEnter={e => { if (activeStep !== i) e.currentTarget.style.background='var(--bg2)'; }}
+              onMouseLeave={e => { if (activeStep !== i) e.currentTarget.style.background='transparent'; }}
+            >
+              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'oklch(65% 0.16 55)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
+              <div style={{ fontSize:15, fontWeight:600, color: activeStep === i ? 'var(--bg)' : 'var(--ink)', lineHeight:1.25 }}>{step.title}</div>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ display:'flex', alignItems:'center', padding:'0 2px', color:'var(--border)', fontSize:14, flexShrink:0 }}>→</div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Active step detail */}
+      <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'0 0 12px 12px', padding:'24px 28px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:32, alignItems:'start' }}>
+        <div>
+          <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty' }}>{active.desc}</p>
+        </div>
+        <div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>Methods & tools</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {active.methods.map((m,k) => (
+              <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
+            ))}
+            {withAI && active.aiMethods.map((m,k) => (
+              <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'oklch(65% 0.16 55 / 0.08)' }}>{m}</span>
+            ))}
+          </div>
+          {withAI && (
+            <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'var(--accent)', flexShrink:0 }}></span>
+              <span style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.04em' }}>AI-specific additions</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── About Page ────────────────────────────────────────────────────────────
+function AboutPage({ onNavigate, expFilter, setExpFilter }) {
+  const handleFilter = (type, value) => {
+    setExpFilter({ type, value });
+    onNavigate('experience');
+  };
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:44 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
+
+          {/* Left: bio */}
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
+              <img
+                src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
+                alt="Kristina Hergottová"
+                style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
+              />
+              <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
+                Kristina Hergottová
+              </h1>
+            </div>
+
+            <div style={{ marginBottom:32 }}>
+              <AvailableBadge />
+            </div>
+
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Originally from Slovakia, she is now based in Vigo, Spain. She studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Over the years, she has worked across a range of environments — from early-stage startups to fast-paced digital teams and large corporate organisations — shaping a UX practice that is holistic, strategic, and grounded in real user needs.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
+              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to scale and mature, not just be executed. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+            </p>
+            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
+              In a rapidly evolving industry, she approaches change with curiosity rather than resistance, believing that the best outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+            </p>
+
+            <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+              <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
+                onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
+                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+              >Get in touch</a>
+            </div>
+          </div>
+
+          {/* Right: testimonial carousel — bottom-aligned with bio buttons */}
+          <div style={{ display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+            <AboutTestimonials />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Strengths — services */}
+      <div style={{ paddingTop:48 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          Services
+          Strengths
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
           {[
@@ -907,58 +1582,292 @@ function App() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Process */}
+      <div style={{ paddingTop:48 }}>
+        <ProcessSection />
+      </div>
+
+      {/* Experience stats */}
+      <div style={{ paddingTop:48 }}>
+        <ExperienceStats footer={
+          <button onClick={() => { setExpFilter(null); onNavigate('experience'); }}
+            style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', background:'transparent', cursor:'pointer', transition:'all .2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='var(--bg2)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}
+          >View full experience →</button>
+        } />
+      </div>
+
+    </div>
+  );
+}
+
+// ── Work Page ─────────────────────────────────────────────────────────────
+function WorkPage({ tweaks, onOpenWork }) {
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+
+      {/* Work grid */}
+      <section style={{ paddingBottom:96 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Work</div>
+        {tweaks.layout === 'list' ? (
+          <div>{WORK.map((item,i) => <WorkListItem key={i} item={item} onOpen={onOpenWork} />)}</div>
+        ) : (
+          <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
+            {WORK.map((item,i) => <WorkCard key={i} item={item} onOpen={onOpenWork} />)}
+          </div>
+        )}
       </section>
 
-      {/* ── Writing ── */}
-      <section style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
-          Writing
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(360px, 1fr))', gap:14 }}>
-          {WRITING.map((w,i)=>{
-            const [hov, setHov] = useState(false);
-            return (
-              <a key={i} href={w.href} target="_blank" rel="noopener"
-                onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-                style={{ display:'flex', gap:16, border:'1px solid var(--border)', borderRadius:14, padding:14, alignItems:'center',
-                  background:hov?'var(--bg2)':'transparent', transform:hov?'translateY(-2px)':'none',
-                  boxShadow:hov?'0 8px 28px oklch(0% 0 0/0.06)':'none', transition:'all .22s ease' }}>
-                <img src={w.img} alt="" style={{ width:68, height:54, objectFit:'cover', borderRadius:8, flexShrink:0 }} />
-                <div>
-                  <div style={{ fontSize:14, fontWeight:500, lineHeight:1.4 }}>{w.title}</div>
-                  <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', marginTop:4 }}>Read on Medium →</div>
-                </div>
-              </a>
-            );
-          })}
-        </div>
-      </section>
+    </div>
+  );
+}
 
-      {/* ── Experience ── */}
-      <section id="experience" style={{ paddingBottom:96, borderTop:'1px solid var(--border)', paddingTop:80 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>Experience</div>
-        {EXP.map((e,i)=>(
-          <div key={i} style={{ display:'flex', gap:24, padding:'18px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap', alignItems:'baseline' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', minWidth:88, flexShrink:0 }}>{e.period}</div>
-            <div style={{ flex:1, minWidth:180 }}>
-              <div style={{ fontWeight:500, fontSize:14.5 }}>{e.role}</div>
-              <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{e.co}</div>
+// ── Experience Stats (animated bars, filterable) ──────────────────────────
+function StatBars({ data, total, onFilter, activeFilter, filterType }) {
+  const [animated, setAnimated] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setAnimated(true), 60); return () => clearTimeout(t); }, []);
+  const interactive = !!onFilter;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+      {data.map((d, i) => {
+        const pct = Math.round((d.value / total) * 100);
+        const isActive = interactive && activeFilter?.type === filterType && activeFilter?.value === d.key;
+        return (
+          <div key={i}
+            onClick={() => interactive && onFilter(filterType, d.key)}
+            style={{ cursor: interactive ? 'pointer' : 'default', padding:'10px 12px', borderRadius:10,
+              background: isActive ? 'var(--bg3)' : 'transparent',
+              border:`1px solid ${isActive ? 'var(--border)' : 'transparent'}`,
+              transition:'all .18s' }}
+            onMouseEnter={e => { if (interactive && !isActive) e.currentTarget.style.background='var(--bg2)'; }}
+            onMouseLeave={e => { if (interactive && !isActive) e.currentTarget.style.background='transparent'; }}
+          >
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:7, height:7, borderRadius:'50%', background:d.color, flexShrink:0 }} />
+                <span style={{ fontSize:13, color: isActive ? 'var(--ink)' : 'var(--ink2)', fontWeight: isActive ? 500 : 400, transition:'color .18s' }}>{d.label}</span>
+              </div>
+              <span style={{ fontSize:11, fontFamily:'var(--mono)', color:'var(--ink3)' }}>{pct}%</span>
             </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{e.tags}</div>
+            <div style={{ height:3, background:'var(--bg3)', borderRadius:4, overflow:'hidden' }}>
+              <div style={{ height:'100%', background:d.color, borderRadius:4,
+                width: animated ? `${pct}%` : '0%',
+                transition:`width 0.7s cubic-bezier(.4,0,.2,1) ${i * 0.08}s` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const INDUSTRY_DATA = [
+  { label:'Finance',       value:2, color:'#C8814A', key:'finance' },
+  { label:'Communication', value:1, color:'#4A8BC8', key:'communication' },
+  { label:'Renewables',    value:1, color:'#5BAA6E', key:'renewables' },
+  { label:'Biotech',       value:1, color:'#8A5BC8', key:'biotech' },
+  { label:'LegalTech',     value:1, color:'#C85A6E', key:'legaltech' },
+];
+const ROLES_DATA = [
+  { label:'Lead / Manager', value:5, color:'#C8814A', key:'lead' },
+  { label:'Designer',       value:3, color:'#4A8BC8', key:'designer' },
+  { label:'Mentor',         value:1, color:'#5BAA6E', key:'mentor' },
+  { label:'Other',          value:1, color:'#9A9A8A', key:'other' },
+];
+
+function ExperienceStats({ onFilter, activeFilter, footer }) {
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:48 }}>
+      <div style={{ display:'flex', flexDirection:'column' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Industry</div>
+        <StatBars data={INDUSTRY_DATA} total={6} onFilter={onFilter} activeFilter={activeFilter} filterType="industry" />
+        {footer && <div style={{ marginTop:16 }}>{footer}</div>}
+      </div>
+      <div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Role</div>
+        <StatBars data={ROLES_DATA} total={10} onFilter={onFilter} activeFilter={activeFilter} filterType="role" />
+      </div>
+    </div>
+  );
+}
+
+// ── Experience Accordion Item ─────────────────────────────────────────────
+function ExpAccordionItem({ e, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const hasContent = e.desc || (e.points && e.points.length > 0);
+  const count = e.points ? e.points.length : 0;
+  const toggle = () => { if (!hasContent) return; const next = !open; setOpen(next); if (onToggle) onToggle(next); };
+  return (
+    <div style={{ display:'flex', alignItems:'flex-start' }}>
+      <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:14, lineHeight:1.4 }}>{e.period}</div>
+      <div style={{ position:'relative', flexShrink:0, marginTop:14, zIndex:1, width:12, height:12 }}>
+        <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid var(--accent)', animation:'ringPulse 2.4s ease-out infinite' }} />
+        <div style={{ width:12, height:12, borderRadius:'50%', border:'2px solid var(--accent)', background:'var(--bg)', position:'relative', zIndex:1 }} />
+      </div>
+      <div style={{ paddingLeft:20, flex:1 }}>
+        {/* Card widget */}
+        <div style={{
+          border:'1px solid var(--border)', borderRadius:12,
+          background: open ? 'var(--bg2)' : 'var(--bg)',
+          transition:'background 0.2s ease, border-color 0.15s ease',
+          overflow:'hidden',
+        }}
+          onMouseEnter={e => { if (hasContent && !open) e.currentTarget.style.borderColor='var(--ink3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; }}
+        >
+          {/* Header row */}
+          <div onClick={toggle} style={{ padding:'14px 18px', cursor: hasContent ? 'pointer' : 'default', transition:'background .15s' }}
+            onMouseEnter={e => { if (hasContent && !open) e.currentTarget.style.background='var(--bg3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}
+          >
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+              <div>
+                <div style={{ fontWeight:500, fontSize:14.5, lineHeight:1.3 }}>{e.role}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:13, color:'var(--ink2)' }}>{e.co}</span>
+                  {e.badge && <span style={{ fontFamily:'var(--mono)', fontSize:9, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'1px 8px', opacity:0.85 }}>{e.badge}</span>}
+                </div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:6 }}>{e.tags}</div>
+              </div>
+              {hasContent && (
+                <button onClick={toggle} style={{
+                  flexShrink:0, width:28, height:28,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  background:'none', border:'none',
+                  cursor:'pointer', transition:'color .18s', color:'var(--ink3)', padding:0,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.color='var(--ink)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color='var(--ink3)'; }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none"
+                    style={{ transform:open?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease' }}>
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Expanded content */}
+          {open && (
+            <div style={{ borderTop:'1px solid var(--border)', padding:'16px 18px 18px' }}>
+              {e.desc && <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.75, marginBottom:14, textWrap:'pretty' }}>{e.desc}</p>}
+              {e.points && (
+                <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:7 }}>
+                  {e.points.map((pt, k) => (
+                    <li key={k} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                      <span style={{ width:4, height:4, borderRadius:'50%', background:'var(--accent)', flexShrink:0, marginTop:8 }} />
+                      <span style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.65 }}>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Experience Page ───────────────────────────────────────────────────────
+function FilterPill({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      fontFamily:'var(--mono)', fontSize:11, letterSpacing:'.04em',
+      padding:'5px 12px', borderRadius:20,
+      border:`1px solid ${active ? 'var(--ink)' : 'var(--border)'}`,
+      background: active ? 'var(--ink)' : 'transparent',
+      color: active ? 'var(--bg)' : 'var(--ink2)',
+      cursor:'pointer', transition:'all .18s', whiteSpace:'nowrap',
+    }}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor='var(--ink3)'; e.currentTarget.style.color='var(--ink)'; }}}
+      onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--ink2)'; }}}
+    >{label}</button>
+  );
+}
+
+function ExperiencePage({ expFilter, setExpFilter }) {
+  const toggle = (type, value) => {
+    if (expFilter?.type === type && expFilter?.value === value) setExpFilter(null);
+    else setExpFilter({ type, value });
+  };
+
+  const filtered = expFilter
+    ? EXP.filter(e => expFilter.type === 'industry' ? e.industryTag === expFilter.value : e.roleTag === expFilter.value)
+    : EXP;
+
+  const [openIndex, setOpenIndex] = React.useState(null);
+  React.useEffect(() => { setOpenIndex(null); }, [expFilter]);
+
+  const openEntry = openIndex !== null ? filtered[openIndex] : null;
+  const highlightLocs = openEntry
+    ? (openEntry.worldwide ? ALL_MAP_LOCATIONS.map(l => l.key) : (openEntry.locs || []))
+    : [];
+
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+
+      {/* Header + download button */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:32 }}>
+        <div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
+        </div>
+        <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer"
+          style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none', flexShrink:0, marginTop:4 }}
+          onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+        >↓ Download Resume</a>
+      </div>
+
+      {/* Filters */}
+      <div style={{ marginBottom:40, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 16px', display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Industry</span>
+        {INDUSTRY_DATA.map(d => (
+          <FilterPill key={d.key} label={d.label}
+            active={expFilter?.type === 'industry' && expFilter?.value === d.key}
+            onClick={() => toggle('industry', d.key)} />
+        ))}
+        <div style={{ width:1, height:16, background:'var(--border)', flexShrink:0 }} />
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Role</span>
+        {ROLES_DATA.map(d => (
+          <FilterPill key={d.key} label={d.label}
+            active={expFilter?.type === 'role' && expFilter?.value === d.key}
+            onClick={() => toggle('role', d.key)} />
+        ))}
+      </div>
+
+      {/* Timeline */}
+      <div style={{ position:'relative', marginBottom:80 }}>
+        <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
+        {filtered.map((e,i) => (
+          <div key={i} style={{ marginBottom: i < filtered.length - 1 ? 40 : 0 }}>
+            <ExpAccordionItem e={e} onToggle={isOpen => setOpenIndex(isOpen ? i : null)} />
           </div>
         ))}
-        <div style={{ marginTop:32 }}>
-          <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none' }}
-            onMouseEnter={e=>e.currentTarget.style.background='var(--surface)'}
-            onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-          >↓ Download Resume</a>
-        </div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24, marginTop:56 }}>Studies</div>
+        {filtered.length === 0 && (
+          <div style={{ paddingLeft:136, color:'var(--ink3)', fontSize:14 }}>No matching roles.</div>
+        )}
+      </div>
+
+      {/* Previous assignments map */}
+      <div style={{ borderTop:'1px solid var(--border)', paddingTop:48, marginBottom:48 }}>
+        <WorkMap filteredExp={filtered} highlightLocs={highlightLocs} />
+      </div>
+
+      {/* Studies */}
+      <div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24 }}>Studies</div>
         {[
+          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
           { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
           { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
-          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
-        ].map((ed,i)=>(
+          { deg:'Visiting Researcher — Urbanism', school:'Leibniz Institute of Ecological Urban and Regional Development', loc:'Germany' },
+          { deg:'Student Exchange — Architecture and Urbanism', school:'Gdańsk University of Technology', loc:'Poland' },
+        ].map((ed,i) => (
           <div key={i} style={{ display:'flex', gap:24, padding:'16px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap' }}>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:500, fontSize:14.5 }}>{ed.deg}</div>
@@ -967,81 +1876,147 @@ function App() {
             <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)' }}>{ed.loc}</div>
           </div>
         ))}
-      </section>
+      </div>
 
-      {/* ── CTA ── */}
-      <section style={{ textAlign:'center', padding:'80px 0 96px' }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginBottom:20 }}>
-          <span className="dot-pulse" style={{ marginRight:8 }} /> Available for hire
+    </div>
+  );
+}
+
+// ── Writing Page ──────────────────────────────────────────────────────────
+function WritingPage() {
+  return (
+    <div style={{ paddingTop:48, paddingBottom:96 }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:40 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Writing</div>
+      </div>
+
+      {/* Editorial cards */}
+      <div style={{ display:'grid', gap:24 }}>
+        {WRITING.map((w, i) => {
+          const [hov, setHov] = useState(false);
+          const isMedium   = w.href.includes('medium.com');
+          const isDribbble = w.href.includes('dribbble.com');
+          const cta = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : 'Read →';
+          return (
+            <a key={i} href={w.href} target="_blank" rel="noopener"
+              onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+              className="writing-card"
+              style={{
+                display:'grid', gridTemplateColumns:'220px 1fr', gap:32,
+                padding:28, borderRadius:20, border:'1px solid var(--border)',
+                background: hov ? 'var(--bg2)' : 'var(--bg)',
+                transition:'all .22s ease',
+                transform: hov ? 'translateY(-2px)' : 'none',
+                boxShadow: hov ? '0 12px 40px oklch(0% 0 0/0.07)' : 'none',
+                position:'relative',
+              }}>
+              <img src={w.img} alt=""
+                style={{ width:'100%', aspectRatio:'16/10', objectFit:'cover', borderRadius:12, display:'block' }} />
+              <div style={{ display:'flex', flexDirection:'column', justifyContent:'space-between', minHeight:110 }}>
+                <div>
+                  <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14 }}>
+                    {w.category && (
+                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'3px 10px', letterSpacing:'.06em' }}>
+                        {w.category}
+                      </span>
+                    )}
+                    {w.readTime && (
+                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{w.readTime} read</span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize:18, fontWeight:500, lineHeight:1.35, marginBottom:10, letterSpacing:'-0.01em' }}>{w.title}</h3>
+                  <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{w.excerpt}</p>
+                </div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', marginTop:16, opacity: hov ? 1 : 0.6, transition:'opacity .2s' }}>
+                  {cta}
+                </div>
+              </div>
+              {isMedium && (
+                <div style={{ position:'absolute', top:16, right:16, width:22, height:22, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+                </div>
+              )}
+              {isDribbble && (
+                <div style={{ position:'absolute', top:16, right:16, width:22, height:22, borderRadius:'50%', background:'#EA4C89', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.073c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.386z"/></svg>
+                </div>
+              )}
+            </a>
+          );
+        })}
+      </div>
+
+    </div>
+  );
+}
+
+// ── Contact Page ──────────────────────────────────────────────────────────
+function ContactPage() {
+  return (
+    <div style={{ minHeight:'calc(100vh - 140px)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center', padding:'60px 40px' }}>
+      <section style={{ maxWidth:520, width:'100%' }}>
+        <div style={{ marginBottom:20 }}>
+          <AvailableBadge />
         </div>
-        <h2 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.02em', marginBottom:12 }}>
+        <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.02em', marginBottom:12, lineHeight:1.15 }}>
           Interested in working together?
-        </h2>
-        <p style={{ color:'var(--ink2)', fontSize:15, marginBottom:32 }}>
+        </h1>
+        <p style={{ color:'var(--ink2)', fontSize:15, marginBottom:32, maxWidth:460, margin:'0 auto 32px' }}>
           Real progress happens where clarity and execution align.
         </p>
         <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
           <a href="mailto:hergottovak@gmail.com" style={{ background:'var(--ink)', color:'var(--bg)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', transition:'opacity .2s' }}
             onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
             onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-          >Contact</a>
+          >Send a message</a>
           <a href="https://linkedin.com" target="_blank" rel="noopener" style={{ background:'none', color:'var(--ink)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', border:'1px solid var(--border)', transition:'all .2s' }}
             onMouseEnter={e=>{ e.currentTarget.style.borderColor='var(--ink)'; }}
             onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; }}
           >Connect on LinkedIn</a>
         </div>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:16 }}>hergottovak@gmail.com</div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', marginTop:20 }}>hergottovak@gmail.com</div>
       </section>
 
-      {/* ── Marquee 2 ── */}
-      <Marquee />
-
-      {/* ── Footer ── */}
-      <footer style={{ padding:'32px 0 48px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)' }}>© 2026 — KRISTINA HERGOTTOVÁ</span>
-        <div style={{ display:'flex', gap:24 }}>
-          {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
-            <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
-              onMouseEnter={e=>e.target.style.color='var(--ink)'}
-              onMouseLeave={e=>e.target.style.color='var(--ink3)'}
-            >{l}</a>
-          ))}
-        </div>
-      </footer>
-
-      {/* ── Scroll to top ── */}
-      <ScrollToTop />
     </div>
   );
 }
 
-function ScrollToTop() {
-  const [visible, setVisible] = React.useState(false);
-  React.useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+// ── App ─────────────────────────────────────────────────────────────────
+function App() {
+  const tweaks = useTweaks();
+  const [activePage, setActivePage] = useState('home');
+  const [openItem, setOpenItem] = useState(null);
+  const [expFilter, setExpFilter] = useState(null);
+
+  const navigate = (page) => {
+    setActivePage(page);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
   return (
-    <button
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      style={{
-        position: 'fixed', bottom: 32, right: 32,
-        width: 44, height: 44, borderRadius: '50%',
-        background: 'var(--ink)', color: 'var(--bg)',
-        border: 'none', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: visible ? 1 : 0,
-        pointerEvents: visible ? 'auto' : 'none',
-        transition: 'opacity .25s',
-        zIndex: 999,
-      }}
-      aria-label="Back to top"
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="18 15 12 9 6 15"/>
-      </svg>
-    </button>
+    <>
+      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} />
+      <div className="sidebar-layout" style={{ marginLeft:240, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
+        <div style={{ padding:'0 40px', flex:1 }}>
+
+          {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
+
+          <div key={activePage} className="page-enter">
+            {activePage === 'home'       && <HomePage       tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
+            {activePage === 'about'      && <AboutPage      onNavigate={navigate} expFilter={expFilter} setExpFilter={setExpFilter} />}
+            {activePage === 'work'       && <WorkPage       tweaks={tweaks} onOpenWork={setOpenItem} />}
+            {activePage === 'experience' && <ExperiencePage expFilter={expFilter} setExpFilter={setExpFilter} />}
+            {activePage === 'writing'    && <WritingPage    />}
+            {activePage === 'contact'    && <ContactPage    />}
+          </div>
+
+          <ScrollToTop />
+        </div>
+        <Footer />
+      </div>
+    </>
   );
 }
 
