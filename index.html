@@ -10,6 +10,8 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -36,6 +38,9 @@
     .marquee-track:hover { animation-play-state: paused; }
 
     @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+    .map-tooltip { background:oklch(15% 0.012 78); color:oklch(98.2% 0.007 78); border:none; border-radius:6px; padding:3px 8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap; }
+    .map-tooltip::before { display:none; }
+    .leaflet-container { font-family:'DM Sans',sans-serif; }
     @keyframes pageEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .page-enter { animation: pageEnter 0.28s ease forwards; }
 
@@ -360,12 +365,12 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
 const WORK = [
   {
     title: 'Strategy',
-    desc: 'Defines product and design strategy in close partnership with founders, translating business objectives into clear product direction.',
+    desc: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
     img: 'https://framerusercontent.com/images/gU19czU7xmbSWMe7VfugeRcY2Ck.jpg',
     accent: '55',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
     detail: {
-      body: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
+      body: 'Establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
       projects: [
         { year:'2025', company:'RAKbank', name:'UX strategy for AI Lab', tags:['Ecosystems'], desc:'Led the strategic definition and shared AI vision for a fragmented, multi-product ecosystem across a bank — aligning contributing product teams around common principles, eliminating duplicated efforts, and establishing scalable foundations for a consistent customer experience.',
           scale: [
@@ -389,7 +394,7 @@ const WORK = [
             { bold:'Accelerated team decision-making', rest:' through shared principles, clear design guidelines, and a defined AI identity.' },
           ],
         },
-        { year:'2023–24', company:'Seqera', name:'Organizational UX Strategy', tags:['UX','OKRs'], desc:'Drove a foundational UX strategy to build organizational design maturity, align fragmented product efforts, and create cohesive end-to-end experiences across channels — moving teams from isolated execution toward holistic experience thinking.',
+        { year:'2023–24', company:'Seqera', name:'UX strategy for whole company', tags:['UX','OKRs'], desc:'Drove a foundational UX strategies for year 2023 and 2024 to build organizational design maturity, align fragmented product efforts, and create cohesive end-to-end experiences across channels — moving teams from isolated execution toward holistic experience thinking.',
           scale: [
             { label:'Centralized', desc:'Cross-channel team spanning product, marketing, CX and docs' },
             { label:'3 objectives', desc:'Maturity, research capacity and design system — 10 key results' },
@@ -422,14 +427,48 @@ const WORK = [
     accent: '200',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
     detail: {
-      body: 'Through research and structured facilitation, Kristina moves teams from ambiguity to action. She uncovers real user needs, aligns them with business goals, and validates solutions with users — so what gets built is both meaningful and right.',
+      body: 'Brings deep, cross-disciplinary expertise spanning user research, service design, UX design, design thinking, and innovation practice. Excels in planning and conducting research, as well as designing and facilitating workshops that turn ambiguity into clear direction through structured collaboration. Grounds decisions in real user needs and business context, aligning stakeholders, shaping solutions, and validating them with users to ensure outcomes are both meaningful and effective.',
       projects: [
-        { name:'Design Sprint', tags:['Remote & In-person'], desc:'Led several short, intensive three-day Google-style Design Sprints — bringing together stakeholders, team members, and end users to quickly explore challenges, generate ideas, build prototypes, and test them with users. Consistently produced validated solutions and actionable insights.' },
-        { name:'Stakeholder Workshops', tags:['Ideation','Alignment'], desc:'Prepares and leads workshops to generate ideas, clarify uncertain questions, identify gaps, and narrow down toward solutions. Especially valuable when working with challenging or diverse stakeholders, helping align perspectives and drive collaborative decision-making.' },
-        { name:'Usability Testing', tags:['Remote & In-person'], desc:'Usability testing is the fastest way to uncover issues with a product — from usability problems to other friction points. Conducted remotely or in person, this is Kristina\'s most frequently used research method.' },
-        { name:'User Interviews', tags:['Discovery'], desc:'Especially valuable when problems and needs are unclear, technology is complex, or users are highly unique. One of the most reliable methods for discovery and insight gathering.' },
-        { name:'Personas, Surveys & Benchmarking', tags:['Research'], desc:'Research-driven persona definition begins every project. Surveys have supported work from branding to feature prioritisation. Benchmarking proved especially valuable in AI identity work — including a comprehensive benchmark of 27 banking products.' },
-        { name:'Data Analytics & Design Audit', tags:['Analytics'], desc:'Funnels and recorded user walkthroughs delivered the greatest analytical value. Design audits establish a shared baseline for stakeholders and result in a prioritised roadmap for improvement.' },
+        { name:'Design Sprint', desc:'Planned and facilitated intensive three-day Google-style Design Sprints — bringing together stakeholders, team members, and end users to rapidly explore complex challenges, generate and prioritise ideas, build focused prototypes, and validate them through real user testing. Each sprint delivered clear, evidence-backed direction for product teams.',
+          cases:[
+            { year:'2023', company:'Seqera', format:'3-day in-person Design Sprint', desc:'Brought together cross-functional stakeholders to align on a complex product challenge, prototype competing solutions, and validate the most promising direction through user testing — resulting in a tested prototype and clear product direction.' },
+            { year:'2021', company:'Siemens Gamesa', format:'3-day online Design Sprint', desc:'Facilitated a fully remote sprint across distributed teams, maintaining collaborative energy and structured output — resulting in a tested prototype and a well-defined path forward for the product team.' },
+          ],
+        },
+        { name:'Stakeholder Workshops', desc:'Prepares and leads workshops to generate ideas, clarify uncertain questions, identify gaps, and narrow down toward solutions. Especially valuable when working with challenging or diverse stakeholders, helping align perspectives and drive collaborative decision-making.',
+          cases:[
+            { year:'2024', company:'Seqera Labs', format:'Stakeholder Workshops', desc:'The most frequently and intensively used tools and practices at Seqera Labs across complex and data-heavy product design and rebranding initiatives.' },
+          ],
+        },
+        { name:'Usability Testing', desc:'Usability testing is the most commonly and regularly used method for uncovering product issues — from usability problems to broader friction points. Since Kristina\'s first UX role, she has brought it into every project and stage of her career, using it consistently to inform decisions and improve outcomes. Conducted remotely or in person, it remains her primary research approach for quickly identifying and validating areas for improvement.' },
+        { name:'User Interviews', desc:'Especially valuable when problems and needs are unclear, technology is complex, or users are highly unique. One of the most reliable methods for discovery and insight gathering.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'User Interviews', desc:'Usability testing was the most commonly used tool, particularly in projects such as the Complaint Mailbox, where it supported process analysis and problem mapping. It also played a key role in the AI branding initiative, helping uncover and understand client perceptions of AI.' },
+          ],
+        },
+        { name:'Personas', desc:'Research-driven persona definition begins every project — grounding design decisions in real user archetypes, needs, and behaviours.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'Personas', desc:'Personas played a key role in mapping the customer support process across the bank, enabling a shared understanding of user roles, needs, and interactions across multiple touchpoints.' },
+            { year:'2023', company:'Seqera Labs', format:'Personas', desc:'Personas were established when entering a complex technical environment, where initial understanding was limited — particularly due to varying roles and permission structures within the product depending on user type.' },
+            { year:'2021', company:'Siemens Gamesa', format:'Personas', desc:'Complex processes and tools required clear user segmentation, with personas used to define and clarify different user types and their needs.' },
+          ],
+        },
+        { name:'Surveys', desc:'Surveys have supported work from branding to feature prioritisation, providing quantitative signal to complement qualitative findings.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'Survey', desc:'Used to explore client perceptions and understanding of AI, identifying key trends, attitudes, and areas of confusion.' },
+          ],
+        },
+        { name:'Benchmarking', desc:'Used to assess industry standards, identify patterns, and establish competitive context for design decisions. Helps define best practices, reveal gaps, and align solutions with user expectations. Often part of broader research strategies that combine multiple methods, such as usability studies.',
+          cases:[
+            { year:'2025', company:'RAKbank', format:'AI identity & assistants', desc:'Benchmarking proved especially valuable in shaping AI identity work, including a comprehensive review of 27 banking products to establish competitive context, define interaction patterns, and inform design standards for AI assistants.' },
+          ],
+        },
+        { name:'Data Analytics', desc:'Funnels and recorded user walkthroughs delivered the greatest analytical value — surfacing where users drop off and highlighting friction invisible in qualitative sessions.' },
+        { name:'Design Audit', desc:'Design audits create a shared baseline for stakeholders and translate findings into a prioritised roadmap for improvement, making issues visible and enabling alignment before redesign begins.',
+          cases:[
+            { year:'2022', company:'Seqera Labs', format:'Design Audit', desc:'Conducted an audit and assessment prior to product work to understand the state of the design system, including consistency, content patterns, navigation, and overall usability.' },
+          ],
+        },
       ],
     },
   },
@@ -684,6 +723,19 @@ function ProjectAccordionItem({ p }) {
             </div>
           )}
           <p style={{ fontSize:13.5, color:'var(--ink2)', lineHeight:1.7, textWrap:'pretty' }}>{p.desc}</p>
+          {p.cases && (
+            <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:8 }}>
+              {p.cases.map((c,k) => (
+                <div key={k} style={{ display:'flex', gap:14, padding:'12px 14px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border)' }}>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', flexShrink:0, paddingTop:2, minWidth:32 }}>{c.year}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--ink)', marginBottom:3 }}>{c.company} — {c.format}</div>
+                    <div style={{ fontSize:12.5, color:'var(--ink2)', lineHeight:1.6 }}>{c.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {p.scale && <ProjectTabs scale={p.scale} pillars={p.pillars} methods={p.methods} outcomes={p.outcomes} />}
           {(p.href || p.links) && (
             <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:10 }}>
@@ -887,11 +939,16 @@ function Marquee() {
 // ── Experience data ─────────────────────────────────────────────────────
 const EXP = [
   {
-    role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide',
-    desc:'Built AI-native product design, scalable systems, and cross-functional innovation across product, research, and design operations.',
+    role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide', roleTag:'lead', worldwide:true,
+    desc:'Contribute to AI-driven product development, scalable design systems, and end-to-end product operations that enable efficient, high-quality delivery at scale for various clients.',
+    points:[
+      'Builds and optimizes collaborative, cross-functional workflows that connect product, design, brand, research, and content teams.',
+      'Drives creative production pipelines across video, image, illustration, and motion, ensuring consistency and scalability.',
+      'Defines and evolves AI-native product development lifecycles spanning ideation, research, design, content generation, testing, and iteration.',
+    ],
   },
   {
-    role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE',
+    role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE', industryTag:'finance', roleTag:'lead', locs:['dubai'],
     desc:'Led design strategy and operations in an AI-native environment, defining how teams build and ship AI-powered products.',
     points:[
       'Defined AI-native product and design strategy, including orchestration of AI agents across workflows',
@@ -904,7 +961,7 @@ const EXP = [
     ],
   },
   {
-    role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain',
+    role:'Founder, Head of Product & Design', co:'Lawalist', period:'2024–2025', tags:'SaaS · B2C · B2B · LegalTech · Startup · Spain', industryTag:'legaltech', roleTag:'lead', locs:['vigo'],
     desc:'Founded and led an early-stage startup from concept to market-ready product.',
     points:[
       'Built MVP using Webflow',
@@ -916,7 +973,7 @@ const EXP = [
     ],
   },
   {
-    role:'Design Leader & Manager', co:'Seqera', badge:'most challenging role', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain',
+    role:'Design Leader & Manager', co:'Seqera', badge:'most challenging role', period:'2022–2024', tags:'SaaS · B2B · Biotech · Startup · Spain', industryTag:'biotech', roleTag:'lead', locs:['barcelona'],
     desc:'Led end-to-end experience across product, brand, and marketing during hypergrowth.',
     points:[
       'Defined UX strategy, design systems, and experience vision',
@@ -929,7 +986,7 @@ const EXP = [
     ],
   },
   {
-    role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain',
+    role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain', industryTag:'renewables', roleTag:'lead', locs:['bilbao','hamburg'],
     desc:'Led UX strategy and product design across multiple digital platforms.',
     points:[
       'Owned UX strategy across web-based product suite',
@@ -940,9 +997,9 @@ const EXP = [
       'Facilitated Design Sprints and alignment workshops',
     ],
   },
-  { role:'Mentor', co:'ADPList', period:'2021–ongoing', tags:'Design · Freelance · Remote' },
+  { role:'Mentor', co:'ADPList', period:'2021–2025', tags:'Design · Freelance · Remote', roleTag:'mentor', worldwide:true },
   {
-    role:'Product Designer & Researcher', co:'WorkJam & Peerio', badge:'favourite company', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada',
+    role:'Product Designer & Researcher', co:'WorkJam & Peerio', badge:'favourite company', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada', industryTag:'communication', roleTag:'designer', locs:['montreal'],
     desc:'Designed UX for workforce collaboration and secure communication tools across two companies.',
     points:[
       'Designed UX/UI for workforce management platform at WorkJam',
@@ -954,11 +1011,30 @@ const EXP = [
     ],
   },
   {
-    role:'UX Designer & Researcher', co:'Greyson & Erstebank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic',
+    role:'Founder of Design Agency & UX/UI Designer', co:'Volve Design', period:'2017–2018', tags:'Freelance · Worldwide', roleTag:'designer', locs:['sofia','toronto'],
+    desc:'Established design agency supporting early-stage startups with UX/UI design and research across different product stages.',
+    points:[
+      'Designed and delivered websites for Opentrades (USA), focusing on usability, visual hierarchy, and UI consistency.',
+      'Conducted user research and created user journeys and user flows for Dianurse (Bulgaria), a pre-MVP healthcare startup.',
+      'Led UX research and product design for Swiggle (Canada), an early-stage startup, helping define core product flows and overall product structure.',
+      'General focus: supporting early-stage startups in validating ideas, improving user experience, and shaping product direction through research-driven UX design.',
+    ],
+  },
+  {
+    role:'UX Designer & Researcher', co:'Greyson & Erstebank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic', industryTag:'finance', roleTag:'designer', locs:['prague'],
     points:[
       'UX and business analysis for internet banking systems',
       'UX design for identity verification apps',
       'UX/UI design for corporate web platforms',
+    ],
+  },
+  {
+    role:'Intern', co:'Slovak Liaison Office for Research and Development', period:'2014', tags:'Paid internship · Belgium', locs:['brussels'], roleTag:'other',
+    desc:'Completed an internship supporting administrative, communication, and coordination activities within a research and development liaison office.',
+    points:[
+      'Managed and updated the office website, ensuring content accuracy and clarity.',
+      'Prepared agendas and supporting materials for internal and external meetings.',
+      'Assisted in organizing and participating in networking and stakeholder engagement events.',
     ],
   },
 ];
@@ -1265,8 +1341,167 @@ function AboutTestimonials() {
   );
 }
 
+// ── Work Map ──────────────────────────────────────────────────────────────
+const ALL_MAP_LOCATIONS = [
+  { key:'montreal',  name:'Montreal',  coords:[45.5017, -73.5673] },
+  { key:'prague',    name:'Prague',    coords:[50.0755,  14.4378] },
+  { key:'barcelona', name:'Barcelona', coords:[41.3851,   2.1734] },
+  { key:'bilbao',    name:'Bilbao',    coords:[43.2630,  -2.9350] },
+  { key:'dubai',     name:'Dubai',     coords:[25.2048,  55.2708] },
+  { key:'vigo',      name:'Vigo',      coords:[42.2314,  -8.7124] },
+  { key:'sofia',     name:'Sofia',     coords:[42.6977,  23.3219] },
+  { key:'hamburg',   name:'Hamburg',   coords:[53.5511,   9.9937] },
+  { key:'brussels',  name:'Brussels',  coords:[50.8503,   4.3517] },
+  { key:'toronto',   name:'Toronto',   coords:[43.6532, -79.3832] },
+];
+
+function WorkMap({ filteredExp, highlightLocs }) {
+  const containerRef = React.useRef(null);
+  const mapRef = React.useRef(null);
+  const markersRef = React.useRef([]);
+
+  const makeIcon = (highlighted, dimmed) => L.divIcon({
+    className: '',
+    html: highlighted
+      ? `<div style="width:14px;height:14px;border-radius:50%;background:oklch(65% 0.16 55);border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,.4)"></div>`
+      : `<div style="width:10px;height:10px;border-radius:50%;background:oklch(65% 0.16 55);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:${dimmed ? 0.25 : 1}"></div>`,
+    iconSize: highlighted ? [14, 14] : [10, 10],
+    iconAnchor: highlighted ? [7, 7] : [5, 5],
+  });
+
+  // Init map once
+  React.useEffect(() => {
+    if (mapRef.current || !containerRef.current) return;
+    const map = L.map(containerRef.current, {
+      center: [42, 8], zoom: 3,
+      zoomControl: false, scrollWheelZoom: false,
+      attributionControl: false, dragging: false,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    mapRef.current = map;
+  }, []);
+
+  // Update markers when filter or highlight changes
+  React.useEffect(() => {
+    if (!mapRef.current) return;
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    const showAll = !filteredExp || filteredExp.some(e => e.worldwide);
+    const visibleKeys = showAll ? null : new Set(filteredExp.flatMap(e => e.locs || []));
+    const toShow = showAll ? ALL_MAP_LOCATIONS : ALL_MAP_LOCATIONS.filter(l => visibleKeys.has(l.key));
+    const hasHighlight = highlightLocs && highlightLocs.length > 0;
+
+    toShow.forEach(loc => {
+      const isHighlighted = hasHighlight && highlightLocs.includes(loc.key);
+      const isDimmed = hasHighlight && !isHighlighted;
+      const icon = makeIcon(isHighlighted, isDimmed);
+      const m = L.marker(loc.coords, { icon })
+        .addTo(mapRef.current)
+        .bindTooltip(loc.name, { permanent: isHighlighted || !hasHighlight, direction:'top', offset:[0, isHighlighted ? -12 : -10], className:'map-tooltip' })
+        .openTooltip();
+      markersRef.current.push(m);
+    });
+  }, [filteredExp, highlightLocs]);
+
+  return <div ref={containerRef} style={{ width:'100%', height:340, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)' }} />;
+}
+
+// ── Process Section ───────────────────────────────────────────────────────
+function ProcessSection() {
+  const [withAI, setWithAI] = React.useState(false);
+  const [activeStep, setActiveStep] = React.useState(0);
+
+  const steps = [
+    { num:'01', title:'Discover', desc:'Understand the problem space through research, observation, and stakeholder engagement before defining any direction.',
+      methods:['User interviews','Stakeholder workshops','Contextual inquiry','Desk research','Competitive analysis','Heuristic review'],
+      aiMethods:['AI opportunity mapping','Capability assessment','Ethical scoping','Competitive AI benchmarking'] },
+    { num:'02', title:'Define', desc:'Synthesise findings into a clear problem statement, opportunity framing, and shared understanding of user needs.',
+      methods:['Insight synthesis','How might we','Jobs to be done','Personas','Journey mapping','Problem framing'],
+      aiMethods:['AI use case definition','Human-AI interaction model','Edge case scoping'] },
+    { num:'03', title:'Ideate', desc:'Generate a wide range of ideas before converging on the most promising directions to explore further.',
+      methods:['Brainstorming','Design sprints','Concept sketching','Prioritisation','Co-creation workshops','Storyboarding'],
+      aiMethods:['AI-accelerated concept generation','Generative design exploration'] },
+    { num:'04', title:'Prototype', desc:'Build tangible representations of ideas to communicate, explore, and test solutions at the right fidelity.',
+      methods:['Wireframes','Interactive prototypes','Design systems','Service blueprints','Content design','Accessibility review'],
+      aiMethods:['Conversational UX','Adaptive UI patterns','Agent flow mapping'] },
+    { num:'05', title:'Test & Iterate', desc:'Validate solutions with real users, gather evidence, and refine continuously until outcomes meet both user and business goals.',
+      methods:['Usability testing','A/B testing','Benchmarking','Stakeholder review','Data analysis','Iteration planning'],
+      aiMethods:['AI output testing','Trust evaluation','Edge case testing','Bias assessment','Human-in-the-loop review'] },
+    { num:'06', title:'Engineering & System', desc:'Ensure a smooth handoff to engineering, update design system components and documentation, and maintain guidelines so decisions are preserved and scalable.',
+      methods:['Design–dev handoff','Design system updates','Component documentation','Annotation & specs','Guidelines & standards','QA & design review','Writing strategies','PRDs'],
+      aiMethods:['AI pattern library updates','Prompt & tone guidelines','Governance documentation','Design QA for AI outputs'] },
+  ];
+
+  const active = steps[activeStep];
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Process</div>
+        <div onClick={() => setWithAI(v => !v)} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+          <div style={{ position:'relative', width:36, height:20, borderRadius:10, background: withAI ? 'var(--accent)' : 'var(--border)', transition:'background .2s', flexShrink:0 }}>
+            <div style={{ position:'absolute', top:3, left: withAI ? 19 : 3, width:14, height:14, borderRadius:'50%', background:'white', boxShadow:'0 1px 4px rgba(0,0,0,.2)', transition:'left .2s' }} />
+          </div>
+          <span style={{ fontFamily:'var(--mono)', fontSize:11, color: withAI ? 'var(--accent)' : 'var(--ink3)', letterSpacing:'.04em', transition:'color .2s' }}>With AI</span>
+        </div>
+      </div>
+
+      {/* Step tabs */}
+      <div style={{ display:'flex', alignItems:'stretch', border:'1px solid var(--border)', borderRadius:'14px 14px 0 0', overflow:'hidden', borderBottom:'none' }}>
+        {steps.map((step, i) => (
+          <React.Fragment key={i}>
+            <div onClick={() => setActiveStep(i)} style={{
+              flex:1, cursor:'pointer', padding:'20px 14px', textAlign:'center',
+              background: activeStep === i ? 'var(--ink)' : 'transparent',
+              transition:'all .18s',
+            }}
+              onMouseEnter={e => { if (activeStep !== i) e.currentTarget.style.background='var(--bg2)'; }}
+              onMouseLeave={e => { if (activeStep !== i) e.currentTarget.style.background='transparent'; }}
+            >
+              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'oklch(65% 0.16 55)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
+              <div style={{ fontSize:15, fontWeight:600, color: activeStep === i ? 'var(--bg)' : 'var(--ink)', lineHeight:1.25 }}>{step.title}</div>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ display:'flex', alignItems:'center', padding:'0 2px', color:'var(--border)', fontSize:14, flexShrink:0 }}>→</div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Active step detail */}
+      <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'0 0 12px 12px', padding:'24px 28px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:32, alignItems:'start' }}>
+        <div>
+          <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty' }}>{active.desc}</p>
+        </div>
+        <div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>Methods & tools</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {active.methods.map((m,k) => (
+              <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
+            ))}
+            {withAI && active.aiMethods.map((m,k) => (
+              <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'oklch(65% 0.16 55 / 0.08)' }}>{m}</span>
+            ))}
+          </div>
+          {withAI && (
+            <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%', background:'var(--accent)', flexShrink:0 }}></span>
+              <span style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.04em' }}>AI-specific additions</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── About Page ────────────────────────────────────────────────────────────
-function AboutPage() {
+function AboutPage({ onNavigate, expFilter, setExpFilter }) {
+  const handleFilter = (type, value) => {
+    setExpFilter({ type, value });
+    onNavigate('experience');
+  };
   return (
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
@@ -1293,16 +1528,16 @@ function AboutPage() {
             </div>
 
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Originally from Slovakia, she studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+              Originally from Slovakia, she is now based in Vigo, Spain. She studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Over the years, she has worked across different environments — from early-stage startups to fast-paced digital teams and large corporate organisations — which shaped the way she approaches UX design today: holistically, strategically, and always grounded in real user needs.
+              Over the years, she has worked across a range of environments — from early-stage startups to fast-paced digital teams and large corporate organisations — shaping a UX practice that is holistic, strategic, and grounded in real user needs.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to grow — not just be done. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to scale and mature, not just be executed. Her experience spans product design, service design, design systems, branding, and AI-native product development.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
-              In a rapidly evolving industry, she embraces change with curiosity rather than fear — and believes the best design outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+              In a rapidly evolving industry, she approaches change with curiosity rather than resistance, believing that the best outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
             </p>
 
             <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
@@ -1322,7 +1557,7 @@ function AboutPage() {
       </div>
 
       {/* Strengths — services */}
-      <div style={{ borderTop:'1px solid var(--border)', paddingTop:48 }}>
+      <div style={{ paddingTop:48 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:40 }}>
           Strengths
         </div>
@@ -1347,6 +1582,22 @@ function AboutPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Process */}
+      <div style={{ paddingTop:48 }}>
+        <ProcessSection />
+      </div>
+
+      {/* Experience stats */}
+      <div style={{ paddingTop:48 }}>
+        <ExperienceStats footer={
+          <button onClick={() => { setExpFilter(null); onNavigate('experience'); }}
+            style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', background:'transparent', cursor:'pointer', transition:'all .2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='var(--bg2)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}
+          >View full experience →</button>
+        } />
       </div>
 
     </div>
@@ -1374,11 +1625,81 @@ function WorkPage({ tweaks, onOpenWork }) {
   );
 }
 
+// ── Experience Stats (animated bars, filterable) ──────────────────────────
+function StatBars({ data, total, onFilter, activeFilter, filterType }) {
+  const [animated, setAnimated] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setAnimated(true), 60); return () => clearTimeout(t); }, []);
+  const interactive = !!onFilter;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+      {data.map((d, i) => {
+        const pct = Math.round((d.value / total) * 100);
+        const isActive = interactive && activeFilter?.type === filterType && activeFilter?.value === d.key;
+        return (
+          <div key={i}
+            onClick={() => interactive && onFilter(filterType, d.key)}
+            style={{ cursor: interactive ? 'pointer' : 'default', padding:'10px 12px', borderRadius:10,
+              background: isActive ? 'var(--bg3)' : 'transparent',
+              border:`1px solid ${isActive ? 'var(--border)' : 'transparent'}`,
+              transition:'all .18s' }}
+            onMouseEnter={e => { if (interactive && !isActive) e.currentTarget.style.background='var(--bg2)'; }}
+            onMouseLeave={e => { if (interactive && !isActive) e.currentTarget.style.background='transparent'; }}
+          >
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:7, height:7, borderRadius:'50%', background:d.color, flexShrink:0 }} />
+                <span style={{ fontSize:13, color: isActive ? 'var(--ink)' : 'var(--ink2)', fontWeight: isActive ? 500 : 400, transition:'color .18s' }}>{d.label}</span>
+              </div>
+              <span style={{ fontSize:11, fontFamily:'var(--mono)', color:'var(--ink3)' }}>{pct}%</span>
+            </div>
+            <div style={{ height:3, background:'var(--bg3)', borderRadius:4, overflow:'hidden' }}>
+              <div style={{ height:'100%', background:d.color, borderRadius:4,
+                width: animated ? `${pct}%` : '0%',
+                transition:`width 0.7s cubic-bezier(.4,0,.2,1) ${i * 0.08}s` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const INDUSTRY_DATA = [
+  { label:'Finance',       value:2, color:'#C8814A', key:'finance' },
+  { label:'Communication', value:1, color:'#4A8BC8', key:'communication' },
+  { label:'Renewables',    value:1, color:'#5BAA6E', key:'renewables' },
+  { label:'Biotech',       value:1, color:'#8A5BC8', key:'biotech' },
+  { label:'LegalTech',     value:1, color:'#C85A6E', key:'legaltech' },
+];
+const ROLES_DATA = [
+  { label:'Lead / Manager', value:5, color:'#C8814A', key:'lead' },
+  { label:'Designer',       value:3, color:'#4A8BC8', key:'designer' },
+  { label:'Mentor',         value:1, color:'#5BAA6E', key:'mentor' },
+  { label:'Other',          value:1, color:'#9A9A8A', key:'other' },
+];
+
+function ExperienceStats({ onFilter, activeFilter, footer }) {
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:48 }}>
+      <div style={{ display:'flex', flexDirection:'column' }}>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Industry</div>
+        <StatBars data={INDUSTRY_DATA} total={6} onFilter={onFilter} activeFilter={activeFilter} filterType="industry" />
+        {footer && <div style={{ marginTop:16 }}>{footer}</div>}
+      </div>
+      <div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:16 }}>Role</div>
+        <StatBars data={ROLES_DATA} total={10} onFilter={onFilter} activeFilter={activeFilter} filterType="role" />
+      </div>
+    </div>
+  );
+}
+
 // ── Experience Accordion Item ─────────────────────────────────────────────
-function ExpAccordionItem({ e }) {
+function ExpAccordionItem({ e, onToggle }) {
   const [open, setOpen] = useState(false);
   const hasContent = e.desc || (e.points && e.points.length > 0);
   const count = e.points ? e.points.length : 0;
+  const toggle = () => { if (!hasContent) return; const next = !open; setOpen(next); if (onToggle) onToggle(next); };
   return (
     <div style={{ display:'flex', alignItems:'flex-start' }}>
       <div style={{ width:100, flexShrink:0, fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', paddingTop:14, lineHeight:1.4 }}>{e.period}</div>
@@ -1398,7 +1719,7 @@ function ExpAccordionItem({ e }) {
           onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; }}
         >
           {/* Header row */}
-          <div onClick={() => hasContent && setOpen(!open)} style={{ padding:'14px 18px', cursor: hasContent ? 'pointer' : 'default', transition:'background .15s' }}
+          <div onClick={toggle} style={{ padding:'14px 18px', cursor: hasContent ? 'pointer' : 'default', transition:'background .15s' }}
             onMouseEnter={e => { if (hasContent && !open) e.currentTarget.style.background='var(--bg3)'; }}
             onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}
           >
@@ -1412,7 +1733,7 @@ function ExpAccordionItem({ e }) {
                 <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginTop:6 }}>{e.tags}</div>
               </div>
               {hasContent && (
-                <button onClick={() => setOpen(!open)} style={{
+                <button onClick={toggle} style={{
                   flexShrink:0, width:28, height:28,
                   display:'flex', alignItems:'center', justifyContent:'center',
                   background:'none', border:'none',
@@ -1453,12 +1774,45 @@ function ExpAccordionItem({ e }) {
 }
 
 // ── Experience Page ───────────────────────────────────────────────────────
-function ExperiencePage() {
+function FilterPill({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      fontFamily:'var(--mono)', fontSize:11, letterSpacing:'.04em',
+      padding:'5px 12px', borderRadius:20,
+      border:`1px solid ${active ? 'var(--ink)' : 'var(--border)'}`,
+      background: active ? 'var(--ink)' : 'transparent',
+      color: active ? 'var(--bg)' : 'var(--ink2)',
+      cursor:'pointer', transition:'all .18s', whiteSpace:'nowrap',
+    }}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor='var(--ink3)'; e.currentTarget.style.color='var(--ink)'; }}}
+      onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--ink2)'; }}}
+    >{label}</button>
+  );
+}
+
+function ExperiencePage({ expFilter, setExpFilter }) {
+  const toggle = (type, value) => {
+    if (expFilter?.type === type && expFilter?.value === value) setExpFilter(null);
+    else setExpFilter({ type, value });
+  };
+
+  const filtered = expFilter
+    ? EXP.filter(e => expFilter.type === 'industry' ? e.industryTag === expFilter.value : e.roleTag === expFilter.value)
+    : EXP;
+
+  const [openIndex, setOpenIndex] = React.useState(null);
+  React.useEffect(() => { setOpenIndex(null); }, [expFilter]);
+
+  const openEntry = openIndex !== null ? filtered[openIndex] : null;
+  const highlightLocs = openEntry
+    ? (openEntry.worldwide ? ALL_MAP_LOCATIONS.map(l => l.key) : (openEntry.locs || []))
+    : [];
+
   return (
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header + download button */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:40 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:32 }}>
         <div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
         </div>
@@ -1469,23 +1823,50 @@ function ExperiencePage() {
         >↓ Download Resume</a>
       </div>
 
-      {/* Timeline */}
-      <div style={{ position:'relative', marginBottom:80 }}>
-        <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
-        {EXP.map((e,i) => (
-          <div key={i} style={{ marginBottom: i < EXP.length - 1 ? 40 : 0 }}>
-            <ExpAccordionItem e={e} />
-          </div>
+      {/* Filters */}
+      <div style={{ marginBottom:40, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 16px', display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Industry</span>
+        {INDUSTRY_DATA.map(d => (
+          <FilterPill key={d.key} label={d.label}
+            active={expFilter?.type === 'industry' && expFilter?.value === d.key}
+            onClick={() => toggle('industry', d.key)} />
+        ))}
+        <div style={{ width:1, height:16, background:'var(--border)', flexShrink:0 }} />
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', flexShrink:0 }}>Role</span>
+        {ROLES_DATA.map(d => (
+          <FilterPill key={d.key} label={d.label}
+            active={expFilter?.type === 'role' && expFilter?.value === d.key}
+            onClick={() => toggle('role', d.key)} />
         ))}
       </div>
 
+      {/* Timeline */}
+      <div style={{ position:'relative', marginBottom:80 }}>
+        <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
+        {filtered.map((e,i) => (
+          <div key={i} style={{ marginBottom: i < filtered.length - 1 ? 40 : 0 }}>
+            <ExpAccordionItem e={e} onToggle={isOpen => setOpenIndex(isOpen ? i : null)} />
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div style={{ paddingLeft:136, color:'var(--ink3)', fontSize:14 }}>No matching roles.</div>
+        )}
+      </div>
+
+      {/* Previous assignments map */}
+      <div style={{ borderTop:'1px solid var(--border)', paddingTop:48, marginBottom:48 }}>
+        <WorkMap filteredExp={filtered} highlightLocs={highlightLocs} />
+      </div>
+
       {/* Studies */}
-      <div style={{ borderTop:'1px solid var(--border)', paddingTop:56 }}>
+      <div>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24 }}>Studies</div>
         {[
+          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
           { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
           { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
-          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
+          { deg:'Visiting Researcher — Urbanism', school:'Leibniz Institute of Ecological Urban and Regional Development', loc:'Germany' },
+          { deg:'Student Exchange — Architecture and Urbanism', school:'Gdańsk University of Technology', loc:'Poland' },
         ].map((ed,i) => (
           <div key={i} style={{ display:'flex', gap:24, padding:'16px 0', borderBottom:'1px solid var(--border)', flexWrap:'wrap' }}>
             <div style={{ flex:1 }}>
@@ -1607,6 +1988,7 @@ function App() {
   const tweaks = useTweaks();
   const [activePage, setActivePage] = useState('home');
   const [openItem, setOpenItem] = useState(null);
+  const [expFilter, setExpFilter] = useState(null);
 
   const navigate = (page) => {
     setActivePage(page);
@@ -1623,9 +2005,9 @@ function App() {
 
           <div key={activePage} className="page-enter">
             {activePage === 'home'       && <HomePage       tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
-            {activePage === 'about'      && <AboutPage      />}
+            {activePage === 'about'      && <AboutPage      onNavigate={navigate} expFilter={expFilter} setExpFilter={setExpFilter} />}
             {activePage === 'work'       && <WorkPage       tweaks={tweaks} onOpenWork={setOpenItem} />}
-            {activePage === 'experience' && <ExperiencePage />}
+            {activePage === 'experience' && <ExperiencePage expFilter={expFilter} setExpFilter={setExpFilter} />}
             {activePage === 'writing'    && <WritingPage    />}
             {activePage === 'contact'    && <ContactPage    />}
           </div>
