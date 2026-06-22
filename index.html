@@ -48,10 +48,11 @@
       .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
       .stats-grid > div:nth-child(4) { border-top: 1px solid var(--border); }
       .stats-grid > div:nth-child(5) { border-top: 1px solid var(--border); border-right: none !important; }
-      .stats-grid > div:nth-child(3) { border-right: none !important; }
+      .stats-grid > div:nth-child(3) { border-right: none !important; border-bottom: 1px solid var(--border); }
       .work-grid { grid-template-columns: 1fr !important; }
-
+      .hero-cards { width: 100% !important; flex: unset !important; justify-content: center; }
       .writing-card { grid-template-columns: 1fr !important; }
+      .about-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
     }
     .dot-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:oklch(64% 0.16 145); animation:dot-pulse 2s ease-in-out infinite; }
 
@@ -348,7 +349,7 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
         <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
           <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
           <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
-          <div>6+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
+          <div>8+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
           <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
           <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
           <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
@@ -439,6 +440,18 @@ const WORK = [
         { year:'2020', company:'Siemens Gamesa', name:'SiteProspecting', tags:['Product Design','Research'], desc:'Led end-to-end design delivery. Transformed the sales pre-assessment process — reducing project proposal turnaround from weeks to hours by streamlining site evaluation, data visualisation, and decision workflows.', links:[{ href:'https://dribbble.com/shots/25072034-UX-UI-design-of-desktop-SiteProspecting', label:'View on Dribbble →' }] },
         { year:'2017–18', company:'Peerio', name:'Peerio', tags:['Product Design','Research'], desc:'Designer and researcher contributing to research-driven product and brand decisions for an end-to-end encrypted messaging and file-sharing app. Validated interaction patterns in privacy-sensitive contexts, translating findings into UX improvements that balanced security, clarity, and ease of use.', links:[{ href:'https://dribbble.com/shots/25077184-UX-UI-design-of-app-Peerio', label:'Mobile design →' },{ href:'https://dribbble.com/shots/25088741-UX-UI-design-of-desktop-app-Peerio', label:'Desktop design →' }] },
       ],
+    },
+  },
+  {
+    title: 'AI-native Product Development',
+    desc: 'Designing and implementing scalable workflows for product teams.',
+    img: 'ai-native.png',
+    accent: '270',
+    companies: ['Freelance'],
+    href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
+    hrefLabel: 'Read article →',
+    detail: {
+      body: 'Kristina is currently working on a contractual basis with various clients to build AI-native processes, including setting up Claude skills, hooks, and agents across the product lifecycle. Her focus areas include AI-driven product development, scalable design systems and processes, collaborative innovation workflows, and cross-functional product operations.',
     },
   },
   {
@@ -574,16 +587,6 @@ const WORK = [
       projects: [
         { year:'2020–21', company:'Siemens Gamesa', name:'Bid Suite Ecosystem', tags:['IA','Product Design','Service Design','Brand','Design System'], desc:'As UX Architect, developed a proposal for the Bid Suite ecosystem — defining the information architecture, navigation, branding strategy, and visual design across a suite of employee-facing digital products supporting the pre-sales funnel between site engineering, technical, and sales teams. Grounded in service design activities, benchmarking, UX research, data flow mapping, user roles, and close stakeholder collaboration across the organisation.' },
       ],
-    },
-  },
-  {
-    title: 'AI-native Product Development',
-    desc: 'Designing and implementing scalable workflows for product teams.',
-    img: 'ai-native.png',
-    accent: '270',
-    companies: ['Freelance'],
-    detail: {
-      body: 'Kristina is currently working on a contractual basis with various clients to build AI-native processes, including setting up Claude skills, hooks, and agents across the product lifecycle. Her focus areas include AI-driven product development, scalable design systems and processes, collaborative innovation workflows, and cross-functional product operations.',
     },
   },
   {
@@ -798,13 +801,18 @@ function WorkDetail({ item, onClose }) {
                   <span style={{ fontSize:14, color:'var(--ink2)' }}>{p}</span>
                 </div>
               ))}
-              {item.href && (
-                <a href={item.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:28, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
-                  onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
-                  onMouseLeave={e=>e.currentTarget.style.opacity='1'}
-                >{item.hrefLabel || 'Read article →'}</a>
-              )}
             </>
+          )}
+          {item.href && (
+            <div style={{ marginTop:28 }}>
+              {(item.href.includes('medium.com') || item.href.includes('dribbble.com'))
+                ? <ExternalLinkCard href={item.href} label={item.hrefLabel || 'View →'} title={item.title} />
+                : <a href={item.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
+                    onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
+                    onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+                  >{item.hrefLabel || 'Read article →'}</a>
+              }
+            </div>
           )}
         </div>
       </div>
@@ -1267,7 +1275,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+          <div className="hero-cards" style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
             <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
@@ -1278,7 +1286,7 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
         {[
           { to:10, s:'+', l:'Years in product', sub:'2015 → Now' },
           { to:5,  s:'',  l:'Design systems',   sub:'Created or scaled' },
-          { to:6,  s:'+', l:'Products shipped',  sub:'Across 5 industries' },
+          { to:8,  s:'+', l:'Products shipped',  sub:'Across 5 industries' },
           { to:3,  s:'',  l:'Teams built',       sub:'From 0 to scale' },
           { to:1,  s:'',  l:'AI Lab led',        sub:'RAKbank · 2025' },
         ].map((s,i)=>(
@@ -1561,7 +1569,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
       {/* Header */}
       <div style={{ marginBottom:44 }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
+        <div className="about-grid" style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
 
           {/* Left: bio */}
           <div>
@@ -1581,7 +1589,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
             </div>
 
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Originally from Slovakia, she is now based in Vigo, Spain. She studied management in Bratislava before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+              Originally from Slovakia, she is now based in Spain. She studied management before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
               Over the years, she has worked across a range of environments — from early-stage startups to fast-paced digital teams and large corporate organisations — shaping a UX practice that is holistic, strategic, and grounded in real user needs.
@@ -1759,98 +1767,6 @@ function WorkPage({ tweaks, onOpenWork }) {
   );
 }
 
-// ── Experience Stats (floating bubbles, filterable) ───────────────────────
-function StatBubbles({ data, total, onFilter, activeFilter, filterType, groupLabel }) {
-  React.useEffect(() => {
-    if (document.getElementById('bubble-kf')) return;
-    const s = document.createElement('style');
-    s.id = 'bubble-kf';
-    s.textContent = [0,1,2,3,4].map(i =>
-      `@keyframes bfl${i}{0%,100%{transform:translateY(0)}50%{transform:translateY(${-5-i*2}px)}}`
-    ).join('');
-    document.head.appendChild(s);
-  }, []);
-
-  const interactive = !!onFilter;
-  const hasActive = interactive && !!activeFilter;
-
-  const SCATTER = [
-    { top:'6%',  left:'2%'  },
-    { top:'42%', left:'20%' },
-    { top:'4%',  left:'42%' },
-    { top:'38%', left:'60%' },
-    { top:'8%',  left:'76%' },
-  ];
-
-  return (
-    <div style={{ position:'relative', height:210, width:'100%' }}>
-      {groupLabel && (
-        <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', pointerEvents:'none', zIndex:0, whiteSpace:'nowrap' }}>{groupLabel}</div>
-      )}
-      {data.map((d, i) => {
-        const pct = Math.round((d.value / total) * 100);
-        const size = 50 + pct * 1.4;
-        const isActive = hasActive && activeFilter.type === filterType && activeFilter.value === d.key;
-        const dimmed = hasActive && !isActive;
-        const pos = SCATTER[i] || { top:`${10 + i*18}%`, left:`${i*18}%` };
-        return (
-          <div key={i}
-            onClick={() => interactive && onFilter(filterType, d.key)}
-            onMouseEnter={e => { if (interactive && !isActive) { e.currentTarget.style.background = d.color + '2e'; e.currentTarget.style.transform = 'scale(1.06)'; }}}
-            onMouseLeave={e => { if (interactive && !isActive) { e.currentTarget.style.background = d.color + '18'; e.currentTarget.style.transform = 'scale(1)'; }}}
-            style={{
-              position:'absolute', top:pos.top, left:pos.left,
-              width: size, height: size, borderRadius:'50%',
-              background: isActive ? d.color + '40' : d.color + '18',
-              outline: isActive ? `2px solid ${d.color}` : '2px solid transparent',
-              outlineOffset: 2,
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-              cursor: interactive ? 'pointer' : 'default',
-              animation:`bfl${i} ${3.2 + i * 0.6}s ease-in-out ${i * 0.5}s infinite`,
-              transition:'opacity .2s, background .2s, transform .18s, outline-color .18s',
-              opacity: dimmed ? 0.3 : 1,
-            }}
-          >
-            <div style={{ fontSize: Math.max(9, size * 0.115), fontWeight:600, color:d.color, textAlign:'center', lineHeight:1.25, padding:'0 6px' }}>{d.label}</div>
-            <div style={{ fontFamily:'var(--mono)', fontSize: Math.max(8, size * 0.095), color:d.color, opacity:0.7 }}>{pct}%</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const INDUSTRY_DATA = [
-  { label:'Finance',       value:2, color:'#C8814A', key:'finance' },
-  { label:'Communication', value:1, color:'#4A8BC8', key:'communication' },
-  { label:'Renewables',    value:1, color:'#5BAA6E', key:'renewables' },
-  { label:'Biotech',       value:1, color:'#8A5BC8', key:'biotech' },
-  { label:'LegalTech',     value:1, color:'#C85A6E', key:'legaltech' },
-];
-const ROLES_DATA = [
-  { label:'Lead / Manager', value:5, color:'#C8814A', key:'lead' },
-  { label:'Designer',       value:3, color:'#4A8BC8', key:'designer' },
-  { label:'Mentor',         value:1, color:'#5BAA6E', key:'mentor' },
-  { label:'Other',          value:1, color:'#9A9A8A', key:'other' },
-];
-
-function ExperienceStats({ onFilter, activeFilter, footer }) {
-  return (
-    <div style={{ border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
-      <div style={{ textAlign:'center', padding:'10px 0 0', fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.04em' }}>Use as filter</div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:2 }}>
-      <div style={{ padding:'24px 20px', display:'flex', flexDirection:'column' }}>
-        <StatBubbles data={INDUSTRY_DATA} total={6} onFilter={onFilter} activeFilter={activeFilter} filterType="industry" groupLabel="Industry" />
-        {footer && <div style={{ marginTop:16 }}>{footer}</div>}
-      </div>
-      <div style={{ padding:'24px 20px', borderLeft:'1px solid var(--border)' }}>
-        <StatBubbles data={ROLES_DATA} total={10} onFilter={onFilter} activeFilter={activeFilter} filterType="role" groupLabel="Role" />
-      </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Experience Accordion Item ─────────────────────────────────────────────
 function ExpAccordionItem({ e, onToggle }) {
   const [open, setOpen] = useState(false);
@@ -1978,11 +1894,6 @@ function ExperiencePage({ expFilter, setExpFilter }) {
           onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
           onMouseLeave={e=>e.currentTarget.style.background='transparent'}
         >↓ Download Resume</a>
-      </div>
-
-      {/* Industry & Role bubbles */}
-      <div style={{ marginBottom:40 }}>
-        <ExperienceStats onFilter={toggle} activeFilter={expFilter} />
       </div>
 
       {/* Timeline */}
