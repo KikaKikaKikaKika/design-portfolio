@@ -6,7 +6,7 @@
   <title>Kristina Hergottová | Design & Product Leader</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -15,19 +15,21 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:     oklch(98.2% 0.007 78);
-      --bg2:    oklch(96.0% 0.010 78);
-      --bg3:    oklch(93.5% 0.012 78);
-      --ink:    oklch(15%  0.012 78);
-      --ink2:   oklch(42%  0.010 78);
-      --ink3:   oklch(62%  0.008 78);
-      --accent: oklch(65%  0.16  55);
-      --border: oklch(89%  0.009 78);
-      --mono:   'DM Mono', monospace;
-      --sans:   'DM Sans', sans-serif;
+      --bg:      oklch(99%   0.002 192);
+      --bg2:     oklch(96.5% 0.004 192);
+      --bg3:     oklch(93.0% 0.007 192);
+      --ink:     oklch(14%   0.008 192);
+      --ink2:    oklch(42%   0.006 192);
+      --ink3:    oklch(62%   0.004 192);
+      --accent:  #2C22E9;
+      --border:  oklch(89%   0.005 192);
+      --mono:    'DM Mono', monospace;
+      --sans:    'Barlow', sans-serif;
+      --display: 'Impact', 'Arial Narrow', sans-serif;
     }
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4, h5, h6 { font-family: var(--display); }
     a { color: inherit; text-decoration: none; }
     #root { min-height: 100vh; }
     img { display: block; }
@@ -38,9 +40,9 @@
     .marquee-track:hover { animation-play-state: paused; }
 
     @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
-    .map-tooltip { background:oklch(15% 0.012 78); color:oklch(98.2% 0.007 78); border:none; border-radius:6px; padding:3px 8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap; }
+    .map-tooltip { background:oklch(14% 0.008 192); color:oklch(99% 0.002 192); border:none; border-radius:6px; padding:3px 8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap; }
     .map-tooltip::before { display:none; }
-    .leaflet-container { font-family:'DM Sans',sans-serif; }
+    .leaflet-container { font-family:'Barlow',sans-serif; }
     @keyframes pageEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .page-enter { animation: pageEnter 0.28s ease forwards; }
 
@@ -54,7 +56,7 @@
       .writing-card { grid-template-columns: 1fr !important; }
       .about-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
     }
-    .dot-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:oklch(64% 0.16 145); animation:dot-pulse 2s ease-in-out infinite; }
+    .dot-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:#2C22E9; animation:dot-pulse 2s ease-in-out infinite; }
 
     .sidebar-panel { transition: transform .3s ease; }
     @media (max-width: 768px) {
@@ -93,8 +95,8 @@
   <div class="tw-title">⚙ Tweaks</div>
   <label>Accent color</label>
   <select id="tw-accent">
+    <option value="#2C22E9">Blue</option>
     <option value="oklch(65% 0.16 55)">Warm amber</option>
-    <option value="oklch(62% 0.16 145)">Sage green</option>
     <option value="oklch(60% 0.17 260)">Soft violet</option>
     <option value="oklch(58% 0.18 20)">Terracotta</option>
   </select>
@@ -113,7 +115,7 @@
 
 <script type="text/babel">
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "accent": "oklch(62% 0.16 145)",
+  "accent": "#2C22E9",
   "greeting": "time",
   "layout": "cards"
 }/*EDITMODE-END*/;
@@ -147,11 +149,11 @@ function useTweaks() {
 
 function getGreeting(mode) {
   if (mode === 'hey') return 'Hey there 👋';
-  if (mode === 'formal') return 'Hello, friend';
+  if (mode === 'formal') return 'Hello';
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning, friend 🌅';
-  if (h < 18) return 'Good afternoon, friend ☀️';
-  return 'Good evening, friend 🌙';
+  if (h < 12) return 'Good morning 🌅';
+  if (h < 18) return 'Good afternoon ☀️';
+  return 'Good evening 🌙';
 }
 
 // ── Counter ─────────────────────────────────────────────────────────────
@@ -180,7 +182,7 @@ function Counter({ to, suffix = '' }) {
 // ── Sidebar Card Deck ────────────────────────────────────────────────────
 function AvailableBadge() {
   return (
-    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12, color:'oklch(72% 0.14 145)', border:'1px solid oklch(72% 0.14 145/0.45)', borderRadius:20, padding:'5px 12px' }}>
+    <div style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'var(--mono)', fontSize:12, color:'#2C22E9', border:'1px solid rgba(44,34,233,0.45)', borderRadius:20, padding:'5px 12px' }}>
       <span className="dot-pulse" />
       <span>Available for hire</span>
     </div>
@@ -318,13 +320,13 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
       }}>
         <div style={{ padding:'0 8px', marginBottom:0 }}>
           <button onClick={() => go('home')} style={{
-            fontFamily:'var(--mono)', fontSize:13, fontWeight:500, display:'block',
+            fontFamily:'var(--display)', fontSize:18, fontWeight:900, display:'block',
             color:'var(--ink)', background:'none', border:'none', padding:0, cursor:'pointer',
-            textAlign:'left', lineHeight:1.4, transition:'color .15s',
+            textAlign:'left', lineHeight:1.2, transition:'color .15s', letterSpacing:'.04em',
           }}
             onMouseEnter={e => e.currentTarget.style.color='var(--ink3)'}
             onMouseLeave={e => e.currentTarget.style.color='var(--ink)'}
-          >~/kristina</button>
+          >KRISTINA</button>
           <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
         </div>
         <div style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
@@ -347,14 +349,14 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
           })}
         </nav>
         <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
-          <div><span style={{ color:'var(--accent)' }}>10+ yrs</span> building things people love</div>
+          <div><span style={{ color:'var(--bg)' }}>10+ yrs</span> building things people love</div>
           <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
           <div>8+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
           <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
           <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
           <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
             <span className="dot-pulse" />
-            <span style={{ color:'oklch(72% 0.14 145)' }}>available for hire</span>
+            <span style={{ color:'var(--bg)' }}>available for hire</span>
           </div>
         </div>
       </aside>
@@ -368,7 +370,7 @@ const WORK = [
     title: 'Strategy',
     desc: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
     img: 'https://framerusercontent.com/images/gU19czU7xmbSWMe7VfugeRcY2Ck.jpg',
-    accent: '55',
+    accent: '265',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
     detail: {
       body: 'Establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
@@ -487,7 +489,7 @@ const WORK = [
     title: 'Web Design',
     desc: 'Designs websites with a product design mindset — close collaboration with marketing and web developers to deliver polished, on-brand experiences.',
     img: 'https://framerusercontent.com/images/XBsIv57AdTLlQKrwTKC5T8oBIM.png',
-    accent: '55',
+    accent: '265',
     companies: ['Seqera — Nextflow Summit 2022 & 2023'],
     detail: {
       body: 'While Kristina\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
@@ -508,7 +510,7 @@ const WORK = [
     title: 'Content & Conversational Design',
     desc: 'Designs scalable communication systems — unified content frameworks and conversational architectures that align brand voice, UX, AI behaviour, and business goals.',
     img: 'https://framerusercontent.com/images/XWYMeWNpWEw27D25iPnY771A30U.png',
-    accent: '145',
+    accent: '265',
     companies: ['RAKbank', 'Seqera'],
     detail: {
       body: 'In international teams, content is everyone\'s job and no one\'s discipline — inconsistent tone, grammar, and voice creep in as the product scales. Kristina designs the systems that change that. She builds content frameworks, voice guidelines, and conversational architectures that give distributed teams a shared standard to write to — aligning brand voice, UX principles, AI behaviour, and business goals, and transforming content and chatbots from ad-hoc outputs into strategic product capabilities.',
@@ -564,7 +566,7 @@ const WORK = [
     title: 'Branding',
     desc: 'Leads end-to-end brand strategy and identity — from company and product rebrands to AI personas and event identities.',
     img: 'https://framerusercontent.com/images/vg6vsIXhsMLDHSz1MNAbwTAOSE.png',
-    accent: '145',
+    accent: '265',
     companies: ['Seqera', 'RAKbank', 'Lawalist', 'Siemens Gamesa'],
     detail: {
       body: 'Kristina has led end-to-end brand strategy across multiple rebranding initiatives — covering company, individual products, product suites, and a unified AI persona. Work begins with aligning user insights and business expectations into clear strategy, vision, and brand architecture, followed by cohesive visual, verbal, and audio identity development.',
@@ -682,7 +684,7 @@ function ExternalLinkCard({ href, label, title }) {
         <div>
           {category && (
             <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
-              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
+              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'rgba(44,34,233,0.08)', border:'1px solid rgba(44,34,233,0.2)', borderRadius:20, padding:'2px 8px', letterSpacing:'.06em' }}>{category}</span>
               {readTime && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)' }}>{readTime} read</span>}
             </div>
           )}
@@ -832,11 +834,12 @@ function WorkCard({ item, onOpen, onHover, onLeave }) {
         transform: hov ? 'translateY(-3px)' : 'none',
         boxShadow: hov ? '0 12px 40px oklch(0% 0 0/0.07)' : 'none',
         transition:'all 0.25s ease', cursor:'pointer',
+        display:'flex', flexDirection:'column', height:'100%',
       }}>
       <div style={{ overflow:'hidden', height:210, background:'var(--bg3)' }}>
         <img src={item.img} alt={item.title} style={{ width:'100%', height:'100%', objectFit:'cover', transition:'transform .4s ease', transform: hov ? 'scale(1.04)' : 'scale(1)' }} />
       </div>
-      <div style={{ padding:'22px 26px' }}>
+      <div style={{ padding:'22px 26px', flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
           <div>
             {item.tag && <div style={{ fontFamily:'var(--mono)', fontSize:10, background:'var(--accent)', color:'white', borderRadius:4, padding:'2px 8px', display:'inline-block', marginBottom:8, letterSpacing:'.06em' }}>Featured</div>}
@@ -963,7 +966,7 @@ const EXP = [
     ],
   },
   {
-    role:'Product Design Leader & Manager', co:'AI Lab, Rakbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE/Remote', industryTag:'finance', roleTag:'lead', locs:['dubai'],
+    role:'AI Lab Design Leader and Team Manager', co:'AI Lab, RAKbank', period:'2025–2026', tags:'B2C · Finance · Corporate · UAE/Remote', industryTag:'finance', roleTag:'lead', locs:['dubai'],
     desc:'Led design strategy and operations in an AI-native environment, defining how teams build and ship AI-powered products.',
     points:[
       'Defined AI-native product and design strategy, including orchestration of AI agents across workflows',
@@ -1004,7 +1007,7 @@ const EXP = [
     ],
   },
   {
-    role:'Product Design Leader & UX Architect', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain/Remote', industryTag:'renewables', roleTag:'lead', locs:['bilbao','hamburg'],
+    role:'UX Architect & Product Designer and Team Manager', co:'Siemens Gamesa', period:'2020–2022', tags:'B2B · Renewables · Corporate · Spain/Remote', industryTag:'renewables', roleTag:'lead', locs:['bilbao','hamburg'],
     desc:'Led UX strategy and product design across multiple digital platforms.',
     points:[
       'Owned UX strategy across web-based product suite',
@@ -1015,7 +1018,6 @@ const EXP = [
       'Facilitated Design Sprints and alignment workshops',
     ],
   },
-  { role:'Mentor', co:'ADPList', period:'2021–2025', tags:'Design · Volunteer · Remote', roleTag:'mentor', worldwide:true },
   {
     role:'Product Designer & Researcher', co:'WorkJam & Peerio', badge:'favourite company', period:'2017–2020', tags:'SaaS · B2B · Communication · Startup · Canada/Remote', industryTag:'communication', roleTag:'designer', locs:['montreal'],
     desc:'Designed UX for workforce collaboration and secure communication tools across two companies.',
@@ -1029,30 +1031,11 @@ const EXP = [
     ],
   },
   {
-    role:'Founder of Design Agency & UX/UI Designer', co:'Volve Design', period:'2017–2018', tags:'Freelance · Worldwide', roleTag:'designer', locs:['sofia','toronto'],
-    desc:'Established design agency supporting early-stage startups with UX/UI design and research across different product stages.',
-    points:[
-      'Designed and delivered websites for Opentrades (USA), focusing on usability, visual hierarchy, and UI consistency.',
-      'Conducted user research and created user journeys and user flows for Dianurse (Bulgaria), a pre-MVP healthcare startup.',
-      'Led UX research and product design for Swiggle (Canada), an early-stage startup, helping define core product flows and overall product structure.',
-      'General focus: supporting early-stage startups in validating ideas, improving user experience, and shaping product direction through research-driven UX design.',
-    ],
-  },
-  {
-    role:'UX Designer & Researcher', co:'Greyson & Erstebank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic', industryTag:'finance', roleTag:'designer', locs:['prague'],
+    role:'UX Designer & Researcher', co:'Ceska Sporitelna / Erste Bank', badge:'favourite team', period:'2015–2017', tags:'B2C · Finance · Consultancy · Czech Republic', industryTag:'finance', roleTag:'designer', locs:['prague'],
     points:[
       'UX and business analysis for internet banking systems',
       'UX design for identity verification apps',
       'UX/UI design for corporate web platforms',
-    ],
-  },
-  {
-    role:'Intern', co:'Slovak Liaison Office for Research and Development', period:'2014', tags:'Paid internship · Belgium', locs:['brussels'], roleTag:'other',
-    desc:'Completed an internship supporting administrative, communication, and coordination activities within a research and development liaison office.',
-    points:[
-      'Managed and updated the office website, ensuring content accuracy and clarity.',
-      'Prepared agendas and supporting materials for internal and external meetings.',
-      'Assisted in organizing and participating in networking and stakeholder engagement events.',
     ],
   },
 ];
@@ -1105,7 +1088,7 @@ const WRITING = [
 const AI_LAB_ITEM = {
   title: 'Design Lead at AI Lab',
   img: 'https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png',
-  accent: '55',
+  accent: '265',
   tag: 'Featured',
   href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
   hrefLabel: 'Read article →',
@@ -1230,7 +1213,7 @@ function Footer() {
   return (
     <footer style={{ borderTop:'1px solid var(--border)', padding:'16px 40px', display:'flex', justifyContent:'center', alignItems:'center', flexWrap:'wrap', gap:24, background:'var(--bg2)' }}>
       <div style={{ display:'flex', gap:24, flexWrap:'wrap', justifyContent:'center' }}>
-        {[['LinkedIn','https://linkedin.com'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
+        {[['LinkedIn','https://www.linkedin.com/in/kristina-h-16894095/'],['Medium','https://medium.com/@kh.uxer'],['Dribbble','https://dribbble.com/Kristina_Hergott'],['GitHub','https://github.com/KikaKikaKikaKika/Claude-skills'],['Email','mailto:hergottovak@gmail.com']].map(([l,h])=>(
           <a key={l} href={h} style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', transition:'color .18s' }}
             onMouseEnter={e=>e.target.style.color='var(--ink)'}
             onMouseLeave={e=>e.target.style.color='var(--ink3)'}
@@ -1381,8 +1364,8 @@ function WorkMap({ filteredExp, highlightLocs }) {
   const makeIcon = (highlighted, dimmed) => L.divIcon({
     className: '',
     html: highlighted
-      ? `<div style="width:14px;height:14px;border-radius:50%;background:oklch(65% 0.16 55);border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,.4)"></div>`
-      : `<div style="width:10px;height:10px;border-radius:50%;background:oklch(65% 0.16 55);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:${dimmed ? 0.25 : 1}"></div>`,
+      ? `<div style="width:14px;height:14px;border-radius:50%;background:#2C22E9;border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,.4)"></div>`
+      : `<div style="width:10px;height:10px;border-radius:50%;background:#2C22E9;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:${dimmed ? 0.25 : 1}"></div>`,
     iconSize: highlighted ? [14, 14] : [10, 10],
     iconAnchor: highlighted ? [7, 7] : [5, 5],
   });
@@ -1507,7 +1490,7 @@ function ProcessSection() {
               onMouseEnter={e => { if (activeStep !== i) e.currentTarget.style.background='var(--bg2)'; }}
               onMouseLeave={e => { if (activeStep !== i) e.currentTarget.style.background='transparent'; }}
             >
-              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'oklch(65% 0.16 55)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
+              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'var(--bg)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
               <div style={{ fontSize:15, fontWeight:600, color: activeStep === i ? 'var(--bg)' : 'var(--ink)', lineHeight:1.25 }}>{step.title}</div>
             </div>
             {i < steps.length - 1 && (
@@ -1527,7 +1510,7 @@ function ProcessSection() {
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               {[
                 { key:'augmented', label:'Augmented',
-                  style:{ color:'var(--accent)', border:'1px solid oklch(65% 0.16 55 / 0.4)', background:'oklch(65% 0.16 55 / 0.06)' } },
+                  style:{ color:'var(--accent)', border:'1px solid rgba(44,34,233,0.4)', background:'rgba(44,34,233,0.06)' } },
                 { key:'human', label:'Human-led',
                   style:{ color:'var(--ink2)', border:'1px solid var(--border)', background:'var(--bg)' } },
               ].map(({ key, label, style }) => active.withAIView[key]?.length > 0 && (
@@ -1547,7 +1530,7 @@ function ProcessSection() {
                 <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
               ))}
               {withAI && active.aiMethods.map((m,k) => (
-                <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'oklch(65% 0.16 55 / 0.08)' }}>{m}</span>
+                <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'rgba(44,34,233,0.08)' }}>{m}</span>
               ))}
             </div>
           )}
@@ -1589,16 +1572,13 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
             </div>
 
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Originally from Slovakia, she is now based in Spain. She studied management before continuing her path in advanced design studies in Barcelona, combining strategic thinking with a strong user-centered approach.
+              Head of Design with 10+ years turning ideas into shipped products across fintech, biotech, legaltech, and renewables.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Over the years, she has worked across a range of environments — from early-stage startups to fast-paced digital teams and large corporate organisations — shaping a UX practice that is holistic, strategic, and grounded in real user needs.
-            </p>
-            <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Alongside her design work, she has led and managed teams, built systems from scratch, and contributed to organisations where design needed to scale and mature, not just be executed. Her experience spans product design, service design, design systems, branding, and AI-native product development.
+              I own design end-to-end, from strategy, research, product, design systems, content, and brand, through to execution, and I'm now applying that to AI-native product development.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:36, textWrap:'pretty' }}>
-              In a rapidly evolving industry, she approaches change with curiosity rather than resistance, believing that the best outcomes come from combining clear strategic thinking with deep empathy for the people using the product.
+              Since 2021, I've built and coached design teams.
             </p>
 
             <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
@@ -1889,7 +1869,7 @@ function ExperiencePage({ expFilter, setExpFilter }) {
         <div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
         </div>
-        <a href="https://docs.google.com/document/d/1y--cKhbrC9N6N3rEyOJnV127nlKHgJGe5mOzsNI03NE/export?format=pdf" target="_blank" rel="noopener noreferrer"
+        <a href="https://docs.google.com/document/d/1t2Rx6Y6uv-omdEpFl0y0t9i2Jkv2aMvD/edit?usp=sharing&ouid=104651860837501568067&rtpof=true&sd=true" target="_blank" rel="noopener noreferrer"
           style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none', flexShrink:0, marginTop:4 }}
           onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
           onMouseLeave={e=>e.currentTarget.style.background='transparent'}
@@ -1918,9 +1898,10 @@ function ExperiencePage({ expFilter, setExpFilter }) {
       <div>
         <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:24 }}>Studies</div>
         {[
-          { deg:'Expert Training — UX, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
           { deg:"Master's — Advanced Studies in Design", school:'Polytechnic University of Catalunya', loc:'Spain' },
           { deg:"Master's — Spatial Planning & Management", school:'Slovak University of Technology', loc:'Slovakia' },
+          { deg:'Expert Training — UX, Agile, Leadership & Management', school:'Nielsen Norman Group (NN/g)', loc:'Certification' },
+          { deg:'Training — People Management', school:'Seqera labs in-house coach', loc:'Spain' },
           { deg:'Visiting Researcher — Urbanism', school:'Leibniz Institute of Ecological Urban and Regional Development', loc:'Germany' },
           { deg:'Student Exchange — Architecture and Urbanism', school:'Gdańsk University of Technology', loc:'Poland' },
         ].map((ed,i) => (
@@ -1974,7 +1955,7 @@ function WritingPage() {
                 <div>
                   <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14 }}>
                     {w.category && (
-                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'oklch(65% 0.16 55/0.08)', border:'1px solid oklch(65% 0.16 55/0.2)', borderRadius:20, padding:'3px 10px', letterSpacing:'.06em' }}>
+                      <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', background:'rgba(44,34,233,0.08)', border:'1px solid rgba(44,34,233,0.2)', borderRadius:20, padding:'3px 10px', letterSpacing:'.06em' }}>
                         {w.category}
                       </span>
                     )}
@@ -2027,7 +2008,7 @@ function ContactPage() {
             onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
             onMouseLeave={e=>e.currentTarget.style.opacity='1'}
           >Send a message</a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener" style={{ background:'none', color:'var(--ink)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', border:'1px solid var(--border)', transition:'all .2s' }}
+          <a href="https://www.linkedin.com/in/kristina-h-16894095/" target="_blank" rel="noopener" style={{ background:'none', color:'var(--ink)', padding:'12px 32px', borderRadius:10, fontSize:15, fontWeight:500, display:'inline-block', border:'1px solid var(--border)', transition:'all .2s' }}
             onMouseEnter={e=>{ e.currentTarget.style.borderColor='var(--ink)'; }}
             onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; }}
           >Connect on LinkedIn</a>
