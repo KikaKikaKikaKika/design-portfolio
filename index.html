@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kristina Hergottová | Design & Product Leader</title>
+  <title>Kristína Hergottová | Design & Product Leader</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -43,8 +43,8 @@
     .map-tooltip { background:oklch(14% 0.008 192); color:oklch(99% 0.002 192); border:none; border-radius:6px; padding:3px 8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.06em; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap; }
     .map-tooltip::before { display:none; }
     .leaflet-container { font-family:'Barlow',sans-serif; }
-    @keyframes pageEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .page-enter { animation: pageEnter 0.28s ease forwards; }
+    @keyframes pageEnter { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+    .page-enter { /* stagger handled by JS */ }
 
     @media (max-width: 600px) {
       .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -287,8 +287,14 @@ function WorkCardDeck({ onOpenWork }) {
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────
-function Sidebar({ activePage, onNavigate, onOpenWork }) {
+function Sidebar({ activePage, onNavigate, onOpenWork, introPlayed }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const rLogo  = React.useRef(null);
+  const rTag   = React.useRef(null);
+  const rDiv   = React.useRef(null);
+  const rNav   = React.useRef(null);
+  const rStats = React.useRef(null);
+
   const navItems = [
     { label: 'Home',       page: 'home' },
     { label: 'About',      page: 'about' },
@@ -298,6 +304,43 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
     { label: 'Contact',    page: 'contact' },
   ];
   const go = (page) => { onNavigate(page); setMobileOpen(false); };
+
+  // Hide on first mount if intro hasn't played yet
+  React.useLayoutEffect(() => {
+    if (introPlayed) return;
+    [rLogo, rTag, rDiv, rStats].forEach(r => {
+      if (r.current) r.current.style.opacity = '0';
+    });
+    if (rNav.current) Array.from(rNav.current.children).forEach(el => {
+      el.style.opacity = '0'; el.style.transform = 'translateX(-8px)';
+    });
+  }, []);
+
+  // Animate in when intro completes
+  React.useEffect(() => {
+    if (!introPlayed) return;
+    const fade = (r, delay) => setTimeout(() => {
+      if (!r.current) return;
+      r.current.style.transition = 'opacity 0.4s ease';
+      r.current.style.opacity = '1';
+    }, delay);
+    // Delays match hero-preview phase3 sequence (relative to introPlayed = t1750ms)
+    // sLogo→1900, sTag→2020, sDiv→2100, sNav→2200+80i, sStats→2800
+    const timers = [
+      fade(rLogo,  1900),
+      fade(rTag,   2020),
+      fade(rDiv,   2100),
+      fade(rStats, 2800),
+    ];
+    if (rNav.current) Array.from(rNav.current.children).forEach((el, i) => {
+      timers.push(setTimeout(() => {
+        el.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1)';
+        el.style.opacity = '1'; el.style.transform = 'translateX(0)';
+      }, 2200 + i * 80));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [introPlayed]);
+
   return (
     <>
       <button className="hamburger-btn" onClick={() => setMobileOpen(!mobileOpen)} style={{
@@ -318,7 +361,7 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
         display:'flex', flexDirection:'column', padding:'28px 16px 24px',
         zIndex:100, overflowY:'auto',
       }}>
-        <div style={{ padding:'0 8px', marginBottom:0 }}>
+        <div ref={rLogo} style={{ padding:'0 8px', marginBottom:0 }}>
           <button onClick={() => go('home')} style={{
             fontFamily:'var(--display)', fontSize:18, fontWeight:900, display:'block',
             color:'var(--ink)', background:'none', border:'none', padding:0, cursor:'pointer',
@@ -326,11 +369,11 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
           }}
             onMouseEnter={e => e.currentTarget.style.color='var(--ink3)'}
             onMouseLeave={e => e.currentTarget.style.color='var(--ink)'}
-          >KRISTINA</button>
-          <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
+          >KRIST&#205;NA</button>
+          <div ref={rTag} style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
         </div>
-        <div style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
-        <nav style={{ flex:1 }}>
+        <div ref={rDiv} style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
+        <nav ref={rNav} style={{ flex:1 }}>
           {navItems.map(item => {
             const isActive = activePage === item.page;
             return (
@@ -348,7 +391,7 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
             );
           })}
         </nav>
-        <div style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
+        <div ref={rStats} style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
           <div><span style={{ color:'var(--bg)' }}>10+ yrs</span> building things people love</div>
           <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
           <div>8+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
@@ -368,7 +411,7 @@ function Sidebar({ activePage, onNavigate, onOpenWork }) {
 const WORK = [
   {
     title: 'Strategy',
-    desc: 'Kristina establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
+    desc: 'Kristína establishes a clear vision across experience, product, and brand by defining goals, OKRs, and measurable actions that create alignment, strengthen collaboration, and improve engagement. See selected achievements below.',
     img: 'https://framerusercontent.com/images/gU19czU7xmbSWMe7VfugeRcY2Ck.jpg',
     accent: '265',
     companies: ['RAKbank', 'Seqera', 'Siemens Gamesa', 'Lawalist'],
@@ -430,7 +473,7 @@ const WORK = [
     accent: '280',
     companies: ['RAKbank', 'Lawalist', 'Seqera', 'Siemens Gamesa', 'Peerio'],
     detail: {
-      body: 'Kristina is a product designer with 10 years of experience working end-to-end across the full product lifecycle — from discovery and user research to roadmap planning, UX/UI design, handover, and design QA. She leads problem definition through workshops and user validation, translates insights into features and experiences, and collaborates closely with product and engineering through delivery.',
+      body: 'Kristína is a product designer with 10 years of experience working end-to-end across the full product lifecycle — from discovery and user research to roadmap planning, UX/UI design, handover, and design QA. She leads problem definition through workshops and user validation, translates insights into features and experiences, and collaborates closely with product and engineering through delivery.',
       projects: [
         { year:'2025–26', company:'RAKbank', name:'Knowledge Management System (KMS)', tags:['Product Design','Service Design','Research','Design System'], desc:'Led end-to-end design of an AI-powered KMS as sole product designer — transforming fragmented internal documentation into a centralised, intelligent system. Reduced friction in information retrieval and enabled faster decision-making. Built and scaled a reusable component library to standardise AI interaction patterns across the ecosystem.' },
         { year:'2025', company:'RAKbank', name:'AI Assistant & AI-Powered Products', tags:['Product Design','Content','Team Management'], desc:'Led design of all AI-powered products including a customer-facing AI assistant within the mobile banking app. Managed and mentored a dedicated team while setting strategic design direction. Established a scalable grid system and AI-native modular components. Remained hands-on — conducting design reviews and delivering key features.' },
@@ -453,7 +496,7 @@ const WORK = [
     href: 'https://medium.com/@kh.uxer/building-ai-native-products-requires-a-complete-shift-in-product-management-heres-why-1897d97375dc',
     hrefLabel: 'Read article →',
     detail: {
-      body: 'Kristina is currently working on a contractual basis with various clients to build AI-native processes, including setting up Claude skills, hooks, and agents across the product lifecycle. Her focus areas include AI-driven product development, scalable design systems and processes, collaborative innovation workflows, and cross-functional product operations.',
+      body: 'Kristína is currently working on a contractual basis with various clients to build AI-native processes, including setting up Claude skills, hooks, and agents across the product lifecycle. Her focus areas include AI-driven product development, scalable design systems and processes, collaborative innovation workflows, and cross-functional product operations.',
     },
   },
   {
@@ -463,7 +506,7 @@ const WORK = [
     accent: '200',
     companies: ['Seqera', 'RAKbank', 'Siemens Gamesa', 'WorkJam'],
     detail: {
-      body: 'Since 2017, Kristina has worked on design systems across every organisation she has partnered with — contributing to, redefining, and building several from the ground up. Her understanding is holistic: not only product components but also brand, content, and marketing assets and guidelines. She collaborates closely with front-end engineers, marketing and brand specialists, and content writers to create a single unified hub.',
+      body: 'Since 2017, Kristína has worked on design systems across every organisation she has partnered with — contributing to, redefining, and building several from the ground up. Her understanding is holistic: not only product components but also brand, content, and marketing assets and guidelines. She collaborates closely with front-end engineers, marketing and brand specialists, and content writers to create a single unified hub.',
       projects: [
         { year:'2025', company:'RAKbank', name:'AI Lab Component Library', tags:['Design System','AI Components'], desc:'Built and scaled a reusable component library to standardise AI interaction patterns and accelerate cross-product delivery — establishing a scalable grid system and AI-native modular components to ensure consistency across the AI product ecosystem.' },
         { year:'2022–24', company:'Seqera', name:'Seqera Design System', tags:['Component Library','Content Guide','Brand Guide'], desc:'As the first design hire during the startup\'s hyper-growth phase (20→90 employees), built the design system from the ground up. Developed a component library (Storybook and Figma), an extensive content style guide, and marketing templates. Supported the scaling of the marketing team (1→6), PM team (1→3), and design team (1→5). In 2023, led a comprehensive rebranding of the company, its events, and its products — leveraging the efficiency of a well-established design system.' },
@@ -477,7 +520,7 @@ const WORK = [
     accent: '320',
     companies: ['RAKbank', 'Siemens Gamesa'],
     detail: {
-      body: 'Across two organisations, Kristina led multiple service design initiatives focused on internal tooling and operational transformation. Internal products were deeply intertwined with team structures, governance models, and cross-functional workflows — requiring a systemic, service-oriented approach rather than isolated product improvements.',
+      body: 'Across two organisations, Kristína led multiple service design initiatives focused on internal tooling and operational transformation. Internal products were deeply intertwined with team structures, governance models, and cross-functional workflows — requiring a systemic, service-oriented approach rather than isolated product improvements.',
       projects: [
         { year:'2025', company:'Undisclosed', name:'Customer–Employee Complaint Management Workflow', tags:['Service Design','Research'], desc:'Led research with 3 stakeholder/user groups and facilitated workshops that produced a comprehensive service blueprint, prioritised problem statements, measurable indicators, current and target state, and a proposal for a future-state service blueprint including recommended features and products.' },
         { year:'2021', company:'Siemens Gamesa', name:'Pre-Sales Process: Engineers & Sales Collaboration', tags:['Service Design','Research'], desc:'Built a comprehensive service blueprint spanning three internal teams and the client — mapping over eight stages, each with more than ten steps, and incorporating 40 tools used across the process. Identified blocked data flows requiring unnecessary tools and steps, informing product team priorities and coordinated cross-team improvements.' },
@@ -492,9 +535,9 @@ const WORK = [
     accent: '265',
     companies: ['Seqera — Nextflow Summit 2022 & 2023'],
     detail: {
-      body: 'While Kristina\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
+      body: 'While Kristína\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
       projects: [
-        { year:'2026', company:'Photography portfolio', name:'Kristina Sport Photographer', tags:['Web Design','Branding','AI Development'], desc:'A personal photography portfolio built from scratch — designed and developed using AI-assisted tools. The site showcases work across 10+ sport categories and 5 countries, supports print and digital sales, and presents a published book and exhibition. A proof that design thinking and AI development together can produce polished, production-ready products without a traditional engineering team.',
+        { year:'2026', company:'Photography portfolio', name:'Kristína Sport Photographer', tags:['Web Design','Branding','AI Development'], desc:'A personal photography portfolio built from scratch — designed and developed using AI-assisted tools. The site showcases work across 10+ sport categories and 5 countries, supports print and digital sales, and presents a published book and exhibition. A proof that design thinking and AI development together can produce polished, production-ready products without a traditional engineering team.',
           links: [{ href:'https://kristinasportphotography.com', label:'Visit website →' }],
         },
         { year:'2022–23', company:'Seqera', name:'Nextflow Summit Website', tags:['Web Design','Branding'], desc:'Led the design of a major event website under a tight three-week deadline, while also creating and evolving the event\'s visual identity each year linked to the parent brand. In 2022, reused legacy components while maintaining a fresh look. In 2023, extended the visual identity for two event locations including stationery and branded materials, while keeping the overall brand cohesive. The result was a fully functional website and a unique, year-specific brand delivered on time.',
@@ -513,7 +556,7 @@ const WORK = [
     accent: '265',
     companies: ['RAKbank', 'Seqera'],
     detail: {
-      body: 'In international teams, content is everyone\'s job and no one\'s discipline — inconsistent tone, grammar, and voice creep in as the product scales. Kristina designs the systems that change that. She builds content frameworks, voice guidelines, and conversational architectures that give distributed teams a shared standard to write to — aligning brand voice, UX principles, AI behaviour, and business goals, and transforming content and chatbots from ad-hoc outputs into strategic product capabilities.',
+      body: 'In international teams, content is everyone\'s job and no one\'s discipline — inconsistent tone, grammar, and voice creep in as the product scales. Kristína designs the systems that change that. She builds content frameworks, voice guidelines, and conversational architectures that give distributed teams a shared standard to write to — aligning brand voice, UX principles, AI behaviour, and business goals, and transforming content and chatbots from ad-hoc outputs into strategic product capabilities.',
       projects: [
         { year:'2025', company:'RAKbank', name:'Conversational UX for AI-Powered Products', tags:['Content','Conversational Design'], desc:'Developed a structured conversational framework for the AI chatbot — covering the primary system prompt, message architecture, reusable YAML-based scenarios, error and fallback logic, escalation and handoff rules, and ethical AI guardrails. Introduced a scalable three-layer implementation model (prompt, middleware, and UI/product layers) embedding key UX principles: user control, transparency, explainability, bias mitigation, and seamless human handoff.', href:'https://medium.com/@kh.uxer/design-for-conversational-multiagent-ai-products-cf23c648faa0', linkLabel:'Read article →',
           scale: [
@@ -569,7 +612,7 @@ const WORK = [
     accent: '265',
     companies: ['Seqera', 'RAKbank', 'Lawalist', 'Siemens Gamesa'],
     detail: {
-      body: 'Kristina has led end-to-end brand strategy across multiple rebranding initiatives — covering company, individual products, product suites, and a unified AI persona. Work begins with aligning user insights and business expectations into clear strategy, vision, and brand architecture, followed by cohesive visual, verbal, and audio identity development.',
+      body: 'Kristína has led end-to-end brand strategy across multiple rebranding initiatives — covering company, individual products, product suites, and a unified AI persona. Work begins with aligning user insights and business expectations into clear strategy, vision, and brand architecture, followed by cohesive visual, verbal, and audio identity development.',
       projects: [
         { year:'2025', company:'RAKbank', name:'AI Persona & Brand Identity', tags:['AI Brand','Brand Strategy'], desc:'Led brand strategy and identity for the unified AI persona — ensuring consistency across every AI product touchpoint in the ecosystem, from visual identity to tone of voice and interaction personality.', href:'https://medium.com/@kh.uxer/designing-an-ai-brand-identity-c417164f0b2a', linkLabel:'Read article →' },
         { year:'2024', company:'Lawalist', name:'Brand from Scratch — Lawa', tags:['Brand Strategy','Visual Identity'], desc:'Created the brand identity from scratch for a new legaltech startup — from brand positioning and architecture through to logo, typography, colour, and guidelines.' },
@@ -585,7 +628,7 @@ const WORK = [
     accent: '20',
     companies: ['Siemens Gamesa'],
     detail: {
-      body: 'Ecosystem design aligns closely with Kristina\'s holistic approach to UX. She focuses on shaping a suite of interconnected products, tools, and processes into a single, coherent experience — rather than a collection of standalone products. She defines information architecture, navigation, interaction patterns, data flow, and branding across products, while supporting distinct user roles, workflows, and operational contexts.',
+      body: 'Ecosystem design aligns closely with Kristína\'s holistic approach to UX. She focuses on shaping a suite of interconnected products, tools, and processes into a single, coherent experience — rather than a collection of standalone products. She defines information architecture, navigation, interaction patterns, data flow, and branding across products, while supporting distinct user roles, workflows, and operational contexts.',
       projects: [
         { year:'2020–21', company:'Siemens Gamesa', name:'Bid Suite Ecosystem', tags:['IA','Product Design','Service Design','Brand','Design System'], desc:'As UX Architect, developed a proposal for the Bid Suite ecosystem — defining the information architecture, navigation, branding strategy, and visual design across a suite of employee-facing digital products supporting the pre-sales funnel between site engineering, technical, and sales teams. Grounded in service design activities, benchmarking, UX research, data flow mapping, user roles, and close stakeholder collaboration across the organisation.' },
       ],
@@ -611,7 +654,7 @@ const WORK = [
             { year:'2024', company:'Seqera Labs', format:'Stakeholder Workshops', desc:'The most frequently and intensively used tools and practices at Seqera Labs across complex and data-heavy product design and rebranding initiatives.' },
           ],
         },
-        { name:'Usability Testing', desc:'Usability testing is the most commonly and regularly used method for uncovering product issues — from usability problems to broader friction points. Since Kristina\'s first UX role, she has brought it into every project and stage of her career, using it consistently to inform decisions and improve outcomes. Conducted remotely or in person, it remains her primary research approach for quickly identifying and validating areas for improvement.' },
+        { name:'Usability Testing', desc:'Usability testing is the most commonly and regularly used method for uncovering product issues — from usability problems to broader friction points. Since Kristína\'s first UX role, she has brought it into every project and stage of her career, using it consistently to inform decisions and improve outcomes. Conducted remotely or in person, it remains her primary research approach for quickly identifying and validating areas for improvement.' },
         { name:'User Interviews', desc:'Especially valuable when problems and needs are unclear, technology is complex, or users are highly unique. One of the most reliable methods for discovery and insight gathering.',
           cases:[
             { year:'2025', company:'RAKbank', format:'User Interviews', desc:'Usability testing was the most commonly used tool, particularly in projects such as the Complaint Mailbox, where it supported process analysis and problem mapping. It also played a key role in the AI branding initiative, helping uncover and understand client perceptions of AI.' },
@@ -877,32 +920,32 @@ const TESTIMONIALS = [
   {
     name: 'Kliment Beliaev',
     role: 'Senior Product Designer, RAKbank',
-    text: 'Kristina isn\'t someone who just fills the Design Lead seat — she genuinely cares about helping others succeed. She helped me organize workshops, build a more structured process, and set up a UI course for the whole team. Our design reviews were nothing but thoughtful and constructive. She knows how to ask the right questions instead of simply giving you answers.',
+    text: 'Kristína isn\'t someone who just fills the Design Lead seat — she genuinely cares about helping others succeed. She helped me organize workshops, build a more structured process, and set up a UI course for the whole team. Our design reviews were nothing but thoughtful and constructive. She knows how to ask the right questions instead of simply giving you answers.',
   },
   {
     name: 'Lilia Garcia',
     role: 'Product Designer, Seqera Labs',
-    text: 'Kristina has a solid foundation in UX principles and a holistic approach to design. Her ability to plan projects end-to-end while keeping the user at the center is remarkable. She successfully led the redesign of the Seqera Platform, created the design system, and established consistent patterns across the platform — greatly enhancing the cohesiveness and efficiency of our design process.',
+    text: 'Kristína has a solid foundation in UX principles and a holistic approach to design. Her ability to plan projects end-to-end while keeping the user at the center is remarkable. She successfully led the redesign of the Seqera Platform, created the design system, and established consistent patterns across the platform — greatly enhancing the cohesiveness and efficiency of our design process.',
   },
   {
     name: 'Mattia Bosio, PhD',
     role: 'Senior Director Product Management, Seqera',
-    text: 'Working with Kristina has been a delight. Her dedication to user advocacy, combined with her expertise and professionalism, has been instrumental in shaping our product\'s evolution. Her leadership in building and mentoring our design team has been invaluable, fostering a culture of collaboration and innovation. She effectively bridged the gap between design, development, and marketing across all touchpoints.',
+    text: 'Working with Kristína has been a delight. Her dedication to user advocacy, combined with her expertise and professionalism, has been instrumental in shaping our product\'s evolution. Her leadership in building and mentoring our design team has been invaluable, fostering a culture of collaboration and innovation. She effectively bridged the gap between design, development, and marketing across all touchpoints.',
   },
   {
     name: 'Joaquim Gamero Burgos',
     role: 'Software Engineer, Seqera Labs',
-    text: 'As a frontend engineer, I collaborated closely with Kristina and I can confidently say she\'s an exceptional UI/UX lead designer. She has an incredible eye for detail and a knack for creating intuitive designs. Her creativity and user-focused approach consistently elevated our projects. Plus, she\'s a fantastic team player — always open to feedback and ready to brainstorm solutions.',
+    text: 'As a frontend engineer, I collaborated closely with Kristína and I can confidently say she\'s an exceptional UI/UX lead designer. She has an incredible eye for detail and a knack for creating intuitive designs. Her creativity and user-focused approach consistently elevated our projects. Plus, she\'s a fantastic team player — always open to feedback and ready to brainstorm solutions.',
   },
   {
     name: 'Santhosh Punniyamurthy',
     role: 'Product, Aarini | Ex-Siemens Gamesa',
-    text: 'If I ever do a startup and have to collaborate with a UX architect, it\'s Kristina. She has this amazing ability to push the boundaries of the product, the user experience and the team as well. Working with her has been such a wonderful learning and fun experience for me. Her work ethics are an inspiration.',
+    text: 'If I ever do a startup and have to collaborate with a UX architect, it\'s Kristína. She has this amazing ability to push the boundaries of the product, the user experience and the team as well. Working with her has been such a wonderful learning and fun experience for me. Her work ethics are an inspiration.',
   },
   {
     name: 'Vittal Prabhu',
     role: 'Agile Delivery Manager, Siemens Gamesa',
-    text: 'Kristina is an amiable, analytical UI/UX architect with a holistic approach towards developing user interface and user experience. She does this with such clarity without compromising on ease of use while maintaining simplicity. She always manages to ask the right questions and makes sure information trickles down to Dev in the best possible way.',
+    text: 'Kristína is an amiable, analytical UI/UX architect with a holistic approach towards developing user interface and user experience. She does this with such clarity without compromising on ease of use while maintaining simplicity. She always manages to ask the right questions and makes sure information trickles down to Dev in the best possible way.',
   },
 ];
 function Testimonials() {
@@ -1094,7 +1137,7 @@ const AI_LAB_ITEM = {
   hrefLabel: 'Read article →',
   companies: ['RAKbank'],
   detail: {
-    body: 'Joining a newly formed team at RAKbank in 2025 with no roadmap, limited cross-department visibility, and knowledge siloed within product management, Kristina did not wait for a brief. Within 10 months, she defined the problem space, mapped the product landscape, identified strategic gaps, and built the frameworks, guidelines, and strategy needed to move the organisation forward. Her work was not about simply using AI — it was about designing products fundamentally powered by it, and ensuring that every team understood how to build them.',
+    body: 'Joining a newly formed team at RAKbank in 2025 with no roadmap, limited cross-department visibility, and knowledge siloed within product management, Kristína did not wait for a brief. Within 10 months, she defined the problem space, mapped the product landscape, identified strategic gaps, and built the frameworks, guidelines, and strategy needed to move the organisation forward. Her work was not about simply using AI — it was about designing products fundamentally powered by it, and ensuring that every team understood how to build them.',
     points: [
       'Mapped the full AI ecosystem — the first complete picture of every AI initiative across the organisation',
       'Defined strategy and AI identity consistent across every product touchpoint',
@@ -1229,25 +1272,63 @@ function Footer() {
 // ════════════════════════════════════════════════════════════════════════
 
 // ── Home Page ────────────────────────────────────────────────────────────
-function HomePage({ tweaks, onNavigate, onOpenWork }) {
-  const greeting = getGreeting(tweaks.greeting);
+function HomePage({ tweaks, onNavigate, onOpenWork, introPlayed }) {
+  const rBadge  = React.useRef(null);
+  const rHead   = React.useRef(null);
+  const rBody   = React.useRef(null);
+  const rBtns   = React.useRef(null);
+  const rCards  = React.useRef(null);
+  const rStats  = React.useRef(null);
+  const rMarq   = React.useRef(null);
+  const rTest   = React.useRef(null);
+
+  React.useLayoutEffect(() => {
+    const base = introPlayed ? 0 : 1750;
+    const reveal = (el, delay) => {
+      el.style.opacity = '0'; el.style.transform = 'translateY(16px)';
+      return setTimeout(() => {
+        el.style.transition = 'opacity 0.52s cubic-bezier(0.16,1,0.3,1), transform 0.52s cubic-bezier(0.16,1,0.3,1)';
+        el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+      }, base + delay);
+    };
+    const timers = [];
+    if (rBadge.current)  timers.push(reveal(rBadge.current,  0));
+    if (rHead.current)   timers.push(reveal(rHead.current,   80));
+    // Paragraph lines — 6 spans animated with 170ms stagger
+    if (rBody.current) {
+      Array.from(rBody.current.children).forEach((el, i) => {
+        timers.push(reveal(el, 300 + i * 170));
+      });
+    }
+    if (rBtns.current)   timers.push(reveal(rBtns.current,   1380));
+    if (rCards.current)  timers.push(reveal(rCards.current,  1620));
+    if (rStats.current)  timers.push(reveal(rStats.current,  2800));
+    if (rMarq.current)   timers.push(reveal(rMarq.current,   3200));
+    if (rTest.current)   timers.push(reveal(rTest.current,   3600));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   return (
     <>
       {/* Hero */}
       <section style={{ paddingTop:48, paddingBottom:96 }}>
         <div style={{ display:'flex', gap:56, alignItems:'stretch', flexWrap:'wrap' }}>
           <div style={{ flex:'1 1 380px' }}>
-            <div style={{ marginBottom:28 }}>
+            <div ref={rBadge} style={{ marginBottom:28 }}>
               <AvailableBadge />
             </div>
-            <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1, marginBottom:10 }}>
-              {greeting}
+            <h1 ref={rHead} style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1, marginBottom:10 }}>
+              <span data-intro-target>Welcome</span> to my portfolio, showcasing the work I've been doing since 2015.
             </h1>
-            <p style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty', marginBottom:24 }}>
-              Welcome to my portfolio, showcasing the work I've been doing since 2015. I've helped startups and global brands turn ambitious ideas into real-world outcomes.<br/><br/>
-              I lead design from end to end—shaping vision, driving research and strategy, and overseeing execution to ensure ideas become impactful, usable products.
-            </p>
-            <div style={{ marginTop:32, display:'flex', gap:12, flexWrap:'wrap' }}>
+            <div ref={rBody} style={{ fontSize:15.5, color:'var(--ink2)', lineHeight:1.78, maxWidth:500, textWrap:'pretty', marginBottom:24 }}>
+              <span style={{display:'block'}}>I've helped startups and global brands turn ambitious</span>
+              <span style={{display:'block'}}>ideas into real-world outcomes.</span>
+              <span style={{display:'block'}}>&nbsp;</span>
+              <span style={{display:'block'}}>I lead design from end to end—shaping vision, driving</span>
+              <span style={{display:'block'}}>research and strategy, and overseeing execution to ensure</span>
+              <span style={{display:'block'}}>ideas become impactful, usable products.</span>
+            </div>
+            <div ref={rBtns} style={{ marginTop:32, display:'flex', gap:12, flexWrap:'wrap' }}>
               <button onClick={() => onNavigate('work')} style={{ background:'var(--ink)', color:'var(--bg)', padding:'10px 24px', borderRadius:8, fontSize:14, fontWeight:500, border:'none', cursor:'pointer', transition:'opacity .2s' }}
                 onMouseEnter={e=>e.currentTarget.style.opacity='.75'}
                 onMouseLeave={e=>e.currentTarget.style.opacity='1'}
@@ -1258,14 +1339,14 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
               >Say hello</a>
             </div>
           </div>
-          <div className="hero-cards" style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+          <div ref={rCards} className="hero-cards" style={{ flex:'0 0 330px', display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
             <WorkCardDeck onOpenWork={onOpenWork} />
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', marginBottom:96 }}>
+      <div ref={rStats} className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', marginBottom:96 }}>
         {[
           { to:10, s:'+', l:'Years in product', sub:'2015 → Now' },
           { to:5,  s:'',  l:'Design systems',   sub:'Created or scaled' },
@@ -1284,10 +1365,10 @@ function HomePage({ tweaks, onNavigate, onOpenWork }) {
       </div>
 
       {/* Marquee */}
-      <Marquee />
+      <div ref={rMarq}><Marquee /></div>
 
       {/* Testimonials */}
-      <Testimonials />
+      <div ref={rTest}><Testimonials /></div>
 
     </>
   );
@@ -1376,7 +1457,7 @@ function WorkMap({ filteredExp, highlightLocs }) {
     const map = L.map(containerRef.current, {
       center: [42, 8], zoom: 3,
       zoomControl: false, scrollWheelZoom: false,
-      attributionControl: false, dragging: false,
+      attributionControl: false, dragging: true,
     });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
     mapRef.current = map;
@@ -1405,7 +1486,7 @@ function WorkMap({ filteredExp, highlightLocs }) {
     });
   }, [filteredExp, highlightLocs]);
 
-  return <div ref={containerRef} style={{ width:'100%', height:340, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)' }} />;
+  return <div ref={containerRef} style={{ width:'100%', height:'100%', minHeight:400, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)' }} />;
 }
 
 // ── Process Section ───────────────────────────────────────────────────────
@@ -1559,11 +1640,11 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
             <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:28 }}>
               <img
                 src="https://framerusercontent.com/images/GlnLzH6v2oI0GoRPOZWXUjEU7o0.png"
-                alt="Kristina Hergottová"
+                alt="Kristína Hergottová"
                 style={{ width:64, height:64, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', flexShrink:0, boxShadow:'0 4px 16px oklch(0% 0 0/0.10)' }}
               />
               <h1 style={{ fontSize:'clamp(28px, 4vw, 44px)', fontWeight:300, letterSpacing:'-0.025em', lineHeight:1.1 }}>
-                Kristina Hergottová
+                Kristína Hergottová
               </h1>
             </div>
 
@@ -1889,9 +1970,45 @@ function ExperiencePage({ expFilter, setExpFilter }) {
         )}
       </div>
 
-      {/* Previous assignments map */}
-      <div style={{ paddingTop:48, marginBottom:48 }}>
-        <WorkMap filteredExp={filtered} highlightLocs={highlightLocs} />
+      {/* Highlights + Map */}
+      <div style={{ paddingTop:48, marginBottom:48, display:'flex', gap:24, alignItems:'flex-start', flexWrap:'wrap' }}>
+
+        {/* Highlight card */}
+        <div style={{ flex:'0 0 248px', minWidth:200, display:'flex', flexDirection:'column' }}>
+          <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:16, padding:'16px 18px', flex:1 }}>
+            <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.09em', textTransform:'uppercase', marginBottom:12 }}>Highlights</div>
+            {[
+              { text:'UX strategy',              count:'×4' },
+              { text:'Teams & ops setup',        count:'×4' },
+              { text:'Design systems',           count:'×5' },
+              { text:'Content guidelines',       count:'×2' },
+              { text:'Company rebrand',          note:'Seqera' },
+              { text:'Product rebrands',         count:'×3' },
+              { text:'Service Design initiatives' },
+              { text:'User Research activities' },
+              { text:'AI brand strategy',        note:'RAKbank' },
+              { text:'AI-native dev framework',  note:'RAKbank' },
+            ].map((item, ii, arr) => (
+              <div key={ii} style={{
+                display:'flex', justifyContent:'space-between', alignItems:'center',
+                padding:'7px 0',
+                borderBottom: ii < arr.length - 1 ? '1px solid var(--border)' : 'none',
+              }}>
+                <div>
+                  <span style={{ fontSize:13, color:'var(--ink)' }}>{item.text}</span>
+                  {item.note && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', marginLeft:6 }}>{item.note}</span>}
+                </div>
+                {item.count && <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', flexShrink:0, marginLeft:8 }}>{item.count}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Map — flex:1 stretches to match card height */}
+        <div style={{ flex:1, minWidth:300, minHeight:400 }}>
+          <WorkMap filteredExp={filtered} highlightLocs={highlightLocs} />
+        </div>
+
       </div>
 
       {/* Studies */}
@@ -2030,11 +2147,101 @@ function ProcessPage() {
   );
 }
 
+// ── IntroOverlay ─────────────────────────────────────────────────────────
+function IntroOverlay({ onDone }) {
+  const bgRef   = React.useRef(null);
+  const wordRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const bg   = bgRef.current;
+    const word = wordRef.current;
+    if (!bg || !word) return;
+    const timers = [];
+    const T = (fn, ms) => timers.push(setTimeout(fn, ms));
+
+    // Phase 1: Welcome scales in
+    T(() => {
+      word.style.transition = 'transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease';
+      word.style.transform  = 'translate(-50%, -50%) scale(1)';
+      word.style.opacity    = '1';
+    }, 80);
+
+    // Phase 2: blue brightens to white + Welcome travels to heading
+    T(() => {
+      bg.style.transition = 'opacity 1.0s ease-in-out';
+      bg.style.opacity    = '0';
+
+      const target = document.querySelector('[data-intro-target]');
+      if (target) {
+        const wRect = target.getBoundingClientRect();
+        const sRect = word.getBoundingClientRect();
+        const dx    = (wRect.left + wRect.width  / 2) - (sRect.left + sRect.width  / 2);
+        const dy    = (wRect.top  + wRect.height / 2) - (sRect.top  + sRect.height / 2);
+        const scale = wRect.width / sRect.width;
+        word.style.transition = 'transform 0.9s cubic-bezier(0.76,0,0.24,1), opacity 0.25s ease 0.7s';
+        word.style.transform  = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${scale})`;
+      }
+      word.style.opacity = '0';
+    }, 950);
+
+    T(onDone, 1750);
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <>
+      <div ref={bgRef} style={{
+        position:'fixed', inset:0, background:'var(--accent)',
+        zIndex:200, pointerEvents:'none',
+      }} />
+      <div ref={wordRef} style={{
+        position:'fixed', top:'50%', left:'50%',
+        transform:'translate(-50%, -50%) scale(0.88)',
+        fontFamily:'var(--display)', fontSize:'clamp(90px, 18vw, 240px)',
+        fontWeight:900, letterSpacing:'-0.01em', lineHeight:1,
+        color:'#ffffff', whiteSpace:'nowrap',
+        zIndex:201, pointerEvents:'none', opacity:0,
+        willChange:'transform, opacity',
+      }}>Welcome</div>
+    </>
+  );
+}
+
+// ── StaggerChildren ──────────────────────────────────────────────────────
+// Animates direct children (or grandchildren if single wrapper div) in sequence
+function StaggerChildren({ children, startDelay = 0, skip = false }) {
+  const ref = React.useRef(null);
+  React.useLayoutEffect(() => {
+    if (skip || !ref.current) return;
+    const direct = Array.from(ref.current.children);
+    // If the page returns a single wrapper div, animate its children; otherwise animate direct children
+    const items = (direct.length === 1 && direct[0].tagName === 'DIV')
+      ? Array.from(direct[0].children)
+      : direct;
+    // Set hidden before paint
+    items.forEach(item => {
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(20px)';
+    });
+    // Stagger reveal
+    const timers = items.map((item, i) =>
+      setTimeout(() => {
+        item.style.transition = 'opacity 0.52s cubic-bezier(0.16,1,0.3,1), transform 0.52s cubic-bezier(0.16,1,0.3,1)';
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0)';
+      }, startDelay + i * 115)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  return <div className="page-enter" ref={ref}>{children}</div>;
+}
+
 // ── App ─────────────────────────────────────────────────────────────────
 function App() {
   const tweaks = useTweaks();
   const [activePage, setActivePage] = useState('home');
   const [openItem, setOpenItem] = useState(null);
+  const [introPlayed, setIntroPlayed] = useState(false);
   const [expFilter, setExpFilter] = useState(null);
 
   const navigate = (page) => {
@@ -2044,20 +2251,22 @@ function App() {
 
   return (
     <>
-      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} />
+      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} introPlayed={introPlayed} />
       <div className="sidebar-layout" style={{ marginLeft:240, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
         <div style={{ padding:'0 40px', flex:1 }}>
 
           {openItem && <WorkDetail item={openItem} onClose={() => setOpenItem(null)} />}
 
-          <div key={activePage} className="page-enter">
-            {activePage === 'home'       && <HomePage       tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} />}
+          {!introPlayed && <IntroOverlay onDone={() => setIntroPlayed(true)} />}
+
+          <StaggerChildren key={activePage} skip={activePage === 'home'}>
+            {activePage === 'home'       && <HomePage       tweaks={tweaks} onNavigate={navigate} onOpenWork={setOpenItem} introPlayed={introPlayed} />}
             {activePage === 'about'      && <AboutPage      onNavigate={navigate} expFilter={expFilter} setExpFilter={setExpFilter} />}
             {activePage === 'work'       && <WorkPage       tweaks={tweaks} onOpenWork={setOpenItem} />}
             {activePage === 'experience' && <ExperiencePage expFilter={expFilter} setExpFilter={setExpFilter} />}
             {activePage === 'writing'    && <WritingPage    />}
             {activePage === 'contact'    && <ContactPage    />}
-          </div>
+          </StaggerChildren>
 
           <ScrollToTop />
         </div>
