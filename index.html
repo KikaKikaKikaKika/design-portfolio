@@ -1653,7 +1653,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
             </div>
 
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
-              Head of Design with 10+ years turning ideas into shipped products across fintech, biotech, legaltech, and renewables.
+              Design leader with 10+ years turning ideas into shipped products across fintech, biotech, legaltech, and renewables.
             </p>
             <p style={{ fontSize:16, lineHeight:1.85, color:'var(--ink2)', marginBottom:20, textWrap:'pretty' }}>
               I own design end-to-end, from strategy, research, product, design systems, content, and brand, through to execution, and I'm now applying that to AI-native product development.
@@ -1818,7 +1818,7 @@ function WorkPage({ tweaks, onOpenWork }) {
           <div className="work-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(370px, 1fr))', gap:16 }}>
             {WORK.map((item,i) => {
               const id = item.title.toLowerCase().replace(/[\s&]+/g, '-');
-              return <div key={i} id={'work-' + id}><WorkCard item={item} onOpen={onOpenWork} onHover={() => setHoveredId(id)} onLeave={() => setHoveredId('')} /></div>;
+              return <div key={i} id={'work-' + id} style={{ animation:'cardEnter 0.45s ease both', animationDelay:`${i * 0.1}s` }}><WorkCard item={item} onOpen={onOpenWork} onHover={() => setHoveredId(id)} onLeave={() => setHoveredId('')} /></div>;
             })}
           </div>
         )}
@@ -1950,7 +1950,7 @@ function ExperiencePage({ expFilter, setExpFilter }) {
         <div>
           <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase' }}>Experience</div>
         </div>
-        <a href="https://docs.google.com/document/d/1t2Rx6Y6uv-omdEpFl0y0t9i2Jkv2aMvD/edit?usp=sharing&ouid=104651860837501568067&rtpof=true&sd=true" target="_blank" rel="noopener noreferrer"
+        <a href="https://docs.google.com/document/d/1t2Rx6Y6uv-omdEpFl0y0t9i2Jkv2aMvD/export?format=pdf" download rel="noopener noreferrer"
           style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 20px', display:'inline-flex', alignItems:'center', gap:8, transition:'all .2s', textDecoration:'none', flexShrink:0, marginTop:4 }}
           onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
           onMouseLeave={e=>e.currentTarget.style.background='transparent'}
@@ -1961,7 +1961,7 @@ function ExperiencePage({ expFilter, setExpFilter }) {
       <div style={{ position:'relative', marginBottom:80 }}>
         <div style={{ position:'absolute', left:106, top:4, bottom:4, width:1, background:'var(--border)' }} />
         {filtered.map((e,i) => (
-          <div key={i} style={{ marginBottom: i < filtered.length - 1 ? 40 : 0 }}>
+          <div key={i} style={{ marginBottom: i < filtered.length - 1 ? 40 : 0, animation:'cardEnter 0.45s ease both', animationDelay:`${i * 0.1}s` }}>
             <ExpAccordionItem e={e} onToggle={isOpen => setOpenIndex(isOpen ? i : null)} />
           </div>
         ))}
