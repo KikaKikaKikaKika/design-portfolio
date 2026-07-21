@@ -1631,7 +1631,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header */}
-      <div style={{ marginBottom:44 }}>
+      <div style={{ marginBottom:44, animation:'cardEnter 0.45s ease both' }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
         <div className="about-grid" style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
 
@@ -1697,6 +1697,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
               borderRight: i%2===0 ? '1px solid var(--border)' : 'none',
               borderBottom: i<4 ? '1px solid var(--border)' : 'none',
               background:'var(--bg)',
+              animation:'cardEnter 0.45s ease both', animationDelay:`${0.15 + i * 0.08}s`,
             }}>
               <div style={{ fontSize:18, color:'var(--accent)', marginBottom:12 }}>{s.icon}</div>
               <h3 style={{ fontSize:15, fontWeight:600, marginBottom:8 }}>{s.title}</h3>
@@ -2058,6 +2059,7 @@ function WritingPage() {
               onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
               className="writing-card"
               style={{
+                animation:'cardEnter 0.45s ease both', animationDelay:`${i * 0.1}s`,
                 display:'grid', gridTemplateColumns:'220px 1fr', gap:32,
                 padding:28, borderRadius:20, border:'1px solid var(--border)',
                 background: hov ? 'var(--bg2)' : 'var(--bg)',
