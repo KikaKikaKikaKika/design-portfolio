@@ -4,14 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kristína Hergottová | Design & Product Leader</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232C22E9'/><text x='50' y='72' font-family='serif' font-size='62' font-weight='600' fill='white' text-anchor='middle'>K</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -26,6 +25,28 @@
       --mono:    'DM Mono', monospace;
       --sans:    'Barlow', sans-serif;
       --display: 'Impact', 'Arial Narrow', sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg:      oklch(12%   0.008 192);
+      --bg2:     oklch(17%   0.008 192);
+      --bg3:     oklch(22%   0.010 192);
+      --ink:     oklch(95%   0.004 192);
+      --ink2:    oklch(68%   0.006 192);
+      --ink3:    oklch(48%   0.005 192);
+      --accent:  oklch(67%   0.25  265);
+      --border:  oklch(26%   0.008 192);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg:      oklch(12%   0.008 192);
+        --bg2:     oklch(17%   0.008 192);
+        --bg3:     oklch(22%   0.010 192);
+        --ink:     oklch(95%   0.004 192);
+        --ink2:    oklch(68%   0.006 192);
+        --ink3:    oklch(48%   0.005 192);
+        --accent:  oklch(67%   0.25  265);
+        --border:  oklch(26%   0.008 192);
+      }
     }
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
@@ -287,8 +308,30 @@ function WorkCardDeck({ onOpenWork }) {
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────
-function Sidebar({ activePage, onNavigate, onOpenWork, introPlayed }) {
+function Sidebar({ activePage, onNavigate, onOpenWork, introPlayed, theme, onToggleTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [navIdx, setNavIdx] = React.useState(-1);
+  const resultRefs = React.useRef([]);
+  const searchInputRef = React.useRef(null);
+  const searchResults = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return SEARCH_INDEX.filter(e => e.keywords.includes(q)).slice(0, 8);
+  }, [searchQuery]);
+  React.useEffect(() => { setNavIdx(-1); resultRefs.current = []; }, [searchResults.length]);
+  const closeSearch = () => { setSearchOpen(false); setSearchQuery(''); setNavIdx(-1); };
+  const onInputKeyDown = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (searchResults.length > 0) { setNavIdx(0); resultRefs.current[0]?.focus(); } }
+    else if (e.key === 'Escape') { closeSearch(); }
+  };
+  const onResultKeyDown = (e, i, r) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); const n = (i + 1) % searchResults.length; setNavIdx(n); resultRefs.current[n]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (i === 0) { setNavIdx(-1); searchInputRef.current?.focus(); } else { const n = i - 1; setNavIdx(n); resultRefs.current[n]?.focus(); } }
+    else if (e.key === 'Enter') { e.preventDefault(); go(r.page); closeSearch(); }
+    else if (e.key === 'Escape') { closeSearch(); }
+  };
   const rLogo  = React.useRef(null);
   const rTag   = React.useRef(null);
   const rDiv   = React.useRef(null);
@@ -373,7 +416,14 @@ function Sidebar({ activePage, onNavigate, onOpenWork, introPlayed }) {
           <div ref={rTag} style={{ fontSize:11, color:'var(--ink3)', marginTop:4, fontFamily:'var(--mono)' }}>Design & Product Leader</div>
         </div>
         <div ref={rDiv} style={{ height:1, background:'var(--border)', margin:'20px 8px 20px' }} />
-        <nav ref={rNav} style={{ flex:1 }}>
+        <nav ref={rNav} style={{ flex:1 }} onKeyDown={e => {
+          if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+          e.preventDefault();
+          const btns = Array.from(rNav.current?.querySelectorAll('button') || []);
+          const i = btns.indexOf(document.activeElement);
+          if (e.key === 'ArrowDown' && i < btns.length - 1) btns[i + 1].focus();
+          else if (e.key === 'ArrowUp' && i > 0) btns[i - 1].focus();
+        }}>
           {navItems.map(item => {
             const isActive = activePage === item.page;
             return (
@@ -390,16 +440,67 @@ function Sidebar({ activePage, onNavigate, onOpenWork, introPlayed }) {
               >{item.label}</button>
             );
           })}
+          <div onClick={() => setSearchOpen(true)} style={{ position:'relative', marginTop:6, cursor:'text' }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--ink3)', fontSize:14, pointerEvents:'none' }}>⌕</span>
+            <div style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px 9px 32px', border:'1px solid var(--border)', borderRadius:8, fontSize:14, color:'var(--ink3)', background:'var(--bg2)', fontFamily:'var(--sans)', userSelect:'none' }}>Search...</div>
+          </div>
         </nav>
-        <div ref={rStats} style={{ marginTop:24, background:'var(--ink)', color:'oklch(84% 0.01 78)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85 }}>
-          <div><span style={{ color:'var(--bg)' }}>10+ yrs</span> building things people love</div>
-          <div>5 design systems <span style={{ color:'oklch(55% 0.01 78)' }}>created</span></div>
-          <div>8+ products <span style={{ color:'oklch(55% 0.01 78)' }}>shipped end-to-end</span></div>
-          <div>3 teams <span style={{ color:'oklch(55% 0.01 78)' }}>built & led</span></div>
-          <div>1 AI Lab <span style={{ color:'oklch(55% 0.01 78)' }}>led · RAKbank 2025</span></div>
+        {searchOpen && (
+          <>
+            <div onClick={closeSearch} style={{ position:'fixed', inset:0, background:'oklch(0% 0 0/0.4)', zIndex:300 }} />
+            <div style={{ position:'fixed', top:72, left:'50%', transform:'translateX(-50%)', width:'min(560px, calc(100vw - 48px))', background:'var(--bg)', borderRadius:16, border:'1px solid var(--border)', boxShadow:'0 24px 80px oklch(0% 0 0/0.15)', zIndex:301, padding:24 }}>
+              <div style={{ position:'relative', marginBottom:16 }}>
+                <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'var(--ink3)', fontSize:15, pointerEvents:'none' }}>⌕</span>
+                <input autoFocus ref={searchInputRef} type="text" placeholder="Search skills, projects, experience..."
+                  value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={onInputKeyDown}
+                  aria-label="Search portfolio" aria-controls="search-results" aria-autocomplete="list"
+                  style={{ width:'100%', boxSizing:'border-box', padding:'12px 40px 12px 40px', border:'1px solid var(--border)', borderRadius:10, background:'var(--bg2)', color:'var(--ink)', fontSize:14, fontFamily:'var(--sans)', outline:'none' }}
+                />
+                {searchQuery && (
+                  <button onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }} aria-label="Clear search" style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--ink3)', fontSize:18, lineHeight:1, padding:4 }}>×</button>
+                )}
+              </div>
+              {searchResults.length > 0 && (
+                <div id="search-results" role="listbox" aria-label="Search results" style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:400, overflowY:'auto' }}>
+                  {searchResults.map((r, i) => (
+                    <div key={i}
+                      ref={el => resultRefs.current[i] = el}
+                      tabIndex={0}
+                      role="option"
+                      aria-selected={navIdx === i}
+                      onClick={() => { go(r.page); closeSearch(); }}
+                      onKeyDown={e => onResultKeyDown(e, i, r)}
+                      style={{ padding:'12px 14px', border:'1px solid var(--border)', borderRadius:10, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, transition:'border-color .15s, background .15s', background: navIdx === i ? 'var(--bg2)' : 'var(--bg)', outline:'none' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor='var(--ink3)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}
+                      onFocus={() => setNavIdx(i)}
+                    >
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>{r.section}</div>
+                        <div style={{ fontSize:14, fontWeight:500, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.title}</div>
+                        <div style={{ fontSize:12, color:'var(--ink2)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginTop:2 }}>{r.snippet}</div>
+                      </div>
+                      <span style={{ fontSize:12, color:'var(--ink3)', flexShrink:0, paddingTop:2 }}>Go →</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                <div style={{ fontSize:13, color:'var(--ink3)', fontFamily:'var(--mono)' }}>No results found.</div>
+              )}
+            </div>
+          </>
+        )}
+        <div ref={rStats} style={{ marginTop:24, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:14, padding:'14px 16px', fontFamily:'var(--mono)', fontSize:11, lineHeight:1.85, color:'var(--ink2)' }}>
+          <div><span style={{ color:'var(--ink)' }}>10+ yrs</span> building things people love</div>
+          <div>5 design systems <span style={{ color:'var(--ink3)' }}>created</span></div>
+          <div>8+ products <span style={{ color:'var(--ink3)' }}>shipped end-to-end</span></div>
+          <div>3 teams <span style={{ color:'var(--ink3)' }}>built & led</span></div>
+          <div>1 AI Lab <span style={{ color:'var(--ink3)' }}>led · RAKbank 2025</span></div>
           <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
             <span className="dot-pulse" />
-            <span style={{ color:'var(--bg)' }}>available for hire</span>
+            <span style={{ color:'var(--ink)' }}>available for hire</span>
           </div>
         </div>
       </aside>
@@ -537,8 +638,8 @@ const WORK = [
     detail: {
       body: 'While Kristína\'s primary focus is product design, she has also designed websites — which require a slightly different approach and closer collaboration with marketing stakeholders and web developers.',
       projects: [
-        { year:'2026', company:'Photography portfolio', name:'Kristína Sport Photographer', tags:['Web Design','Branding','AI Development'], desc:'A personal photography portfolio built from scratch — designed and developed using AI-assisted tools. The site showcases work across 10+ sport categories and 5 countries, supports print and digital sales, and presents a published book and exhibition. A proof that design thinking and AI development together can produce polished, production-ready products without a traditional engineering team.',
-          links: [{ href:'https://kristinasportphotography.com', label:'Visit website →' }],
+        { year:'2026', company:'ekolive', name:'Website redesign proposal', tags:['Web Design','UX','Content Strategy'], desc:'A full website redesign proposal for ekolive — restructured around storytelling and user journeys, with a focus on clarity, conversion, and a brand-consistent visual language. Delivered as a high-fidelity prototype showing the new structure, copy direction, and design system foundations.',
+          links: [{ href:'https://nilostudio.net/project-three', label:'View proposal →' }],
         },
         { year:'2022–23', company:'Seqera', name:'Nextflow Summit Website', tags:['Web Design','Branding'], desc:'Led the design of a major event website under a tight three-week deadline, while also creating and evolving the event\'s visual identity each year linked to the parent brand. In 2022, reused legacy components while maintaining a fresh look. In 2023, extended the visual identity for two event locations including stationery and branded materials, while keeping the overall brand cohesive. The result was a fully functional website and a unique, year-specific brand delivered on time.',
           links: [
@@ -610,12 +711,12 @@ const WORK = [
     desc: 'Leads end-to-end brand strategy and identity — from company and product rebrands to AI personas and event identities.',
     img: 'https://framerusercontent.com/images/vg6vsIXhsMLDHSz1MNAbwTAOSE.png',
     accent: '265',
-    companies: ['Seqera', 'RAKbank', 'Lawalist', 'Siemens Gamesa'],
+    companies: ['Seqera', 'RAKbank', 'Siemens Gamesa', 'Nilo Studio'],
     detail: {
       body: 'Kristína has led end-to-end brand strategy across multiple rebranding initiatives — covering company, individual products, product suites, and a unified AI persona. Work begins with aligning user insights and business expectations into clear strategy, vision, and brand architecture, followed by cohesive visual, verbal, and audio identity development.',
       projects: [
-        { year:'2025', company:'RAKbank', name:'AI Persona & Brand Identity', tags:['AI Brand','Brand Strategy'], desc:'Led brand strategy and identity for the unified AI persona — ensuring consistency across every AI product touchpoint in the ecosystem, from visual identity to tone of voice and interaction personality.', href:'https://medium.com/@kh.uxer/designing-an-ai-brand-identity-c417164f0b2a', linkLabel:'Read article →' },
-        { year:'2024', company:'Lawalist', name:'Brand from Scratch — Lawa', tags:['Brand Strategy','Visual Identity'], desc:'Created the brand identity from scratch for a new legaltech startup — from brand positioning and architecture through to logo, typography, colour, and guidelines.' },
+        { year:'2026', company:'Nilo Studio · Cielo Guesthouse', name:'Brand identity & website', tags:['Brand Identity','Web Design','Content Design'], desc:'Full brand identity and website for a boutique guesthouse in Galicia — built from scratch. Logo, colour palette, typography, voice guidelines, photography direction, print merchandise, and a bilingual (EN/ES) website with SEO embedded from the ground up. The goal was something that felt personal and unhurried — not a booking platform, but a host that cares.', links:[{ href:'https://nilostudio.net/cielo.html', label:'View case study →' }, { href:'https://cielo-guesthouse.netlify.app', label:'Visit website →' }] },
+        { year:'2025', company:'RAKbank', name:'AI Persona & Brand Identity', tags:['AI Brand','Brand Strategy'], desc:'Led brand strategy and identity for the unified AI persona — ensuring consistency across every AI product touchpoint in the ecosystem, from visual identity to tone of voice and interaction personality.', links:[{ href:'https://medium.com/@kh.uxer/designing-an-ai-brand-identity-c417164f0b2a', label:'Read article →' }] },
         { year:'2023', company:'Seqera', name:'Full Company Rebrand', tags:['Brand Strategy','Visual Identity'], desc:'Led a comprehensive rebranding of the company, its events, and its products — covering logo, typography, colour system, brand guidelines, and templates. Leveraged the efficiency of an established design system and coordinated rollout across all touchpoints.', links:[{ href:'https://dribbble.com/shots/25067892-Company-rebranding-Seqera', label:'View on Dribbble →' }] },
         { year:'2021', company:'Siemens Gamesa', name:'BitSuite Product Brand Architecture', tags:['Brand Architecture'], desc:'Designed clear brand architecture to support the organisation\'s suite of products — creating structure across a complex ecosystem while ensuring consistency, scalability, and recognisable experience patterns across all touchpoints.' },
       ],
@@ -693,12 +794,13 @@ function ExternalLinkCard({ href, label, title }) {
   const [hov, setHov] = useState(false);
   const isMedium   = href.includes('medium.com');
   const isDribbble = href.includes('dribbble.com');
+  const isNilo     = href.includes('nilostudio.net');
   const article    = isMedium ? WRITING.find(w => w.href === href) : null;
   const img        = article ? article.img : null;
   const displayTitle = article ? article.title : (title || label);
   const category   = article ? article.category : null;
   const readTime   = article ? article.readTime : null;
-  const cta        = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : 'View →';
+  const cta        = isMedium ? 'Read on Medium →' : isDribbble ? 'View on Dribbble →' : isNilo ? 'Read on Nilo →' : 'View →';
 
   const PlatformBadge = () => isMedium ? (
     <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -708,6 +810,8 @@ function ExternalLinkCard({ href, label, title }) {
     <div style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', background:'#EA4C89', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.3-1.555 3.936-4.02 4.395-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4 1.73 1.358 3.92 2.166 6.29 2.166 1.42 0 2.77-.29 4-.814zm-11.62-2.073c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.176zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.08.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.386z"/></svg>
     </div>
+  ) : isNilo ? (
+    <img src="nilo-logo.png" alt="Nilo Studio" style={{ position:'absolute', top:12, right:12, width:22, height:22, borderRadius:'50%', objectFit:'cover', display:'block' }} />
   ) : null;
 
   return (
@@ -788,7 +892,7 @@ function ProjectAccordionItem({ p }) {
           {(p.href || p.links) && (
             <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:10 }}>
               {(p.links || [{ href: p.href, label: p.linkLabel || 'View →' }]).map((l, k) => {
-                const isCard = l.href && (l.href.includes('medium.com') || l.href.includes('dribbble.com'));
+                const isCard = l.href && (l.href.includes('medium.com') || l.href.includes('dribbble.com') || l.href.includes('nilostudio.net'));
                 return isCard
                   ? <ExternalLinkCard key={k} href={l.href} label={l.label} title={p.name} />
                   : <a key={k} href={l.href} target="_blank" rel="noopener"
@@ -850,7 +954,7 @@ function WorkDetail({ item, onClose }) {
           )}
           {item.href && (
             <div style={{ marginTop:28 }}>
-              {(item.href.includes('medium.com') || item.href.includes('dribbble.com'))
+              {(item.href.includes('medium.com') || item.href.includes('dribbble.com') || item.href.includes('nilostudio.net'))
                 ? <ExternalLinkCard href={item.href} label={item.hrefLabel || 'View →'} title={item.title} />
                 : <a href={item.href} target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', borderBottom:'1px solid var(--accent)', paddingBottom:2, transition:'opacity .2s' }}
                     onMouseEnter={e=>e.currentTarget.style.opacity='.7'}
@@ -921,31 +1025,37 @@ const TESTIMONIALS = [
     name: 'Kliment Beliaev',
     role: 'Senior Product Designer, RAKbank',
     text: 'Kristína isn\'t someone who just fills the Design Lead seat — she genuinely cares about helping others succeed. She helped me organize workshops, build a more structured process, and set up a UI course for the whole team. Our design reviews were nothing but thoughtful and constructive. She knows how to ask the right questions instead of simply giving you answers.',
+    tags: ['Leadership', 'Mentoring', 'Workshops', 'Design reviews', 'RAKbank'],
   },
   {
     name: 'Lilia Garcia',
     role: 'Product Designer, Seqera Labs',
     text: 'Kristína has a solid foundation in UX principles and a holistic approach to design. Her ability to plan projects end-to-end while keeping the user at the center is remarkable. She successfully led the redesign of the Seqera Platform, created the design system, and established consistent patterns across the platform — greatly enhancing the cohesiveness and efficiency of our design process.',
+    tags: ['UX design', 'Design system', 'Platform redesign', 'Seqera', 'End-to-end'],
   },
   {
     name: 'Mattia Bosio, PhD',
     role: 'Senior Director Product Management, Seqera',
     text: 'Working with Kristína has been a delight. Her dedication to user advocacy, combined with her expertise and professionalism, has been instrumental in shaping our product\'s evolution. Her leadership in building and mentoring our design team has been invaluable, fostering a culture of collaboration and innovation. She effectively bridged the gap between design, development, and marketing across all touchpoints.',
+    tags: ['Leadership', 'Mentoring', 'User advocacy', 'Cross-functional', 'Seqera'],
   },
   {
     name: 'Joaquim Gamero Burgos',
     role: 'Software Engineer, Seqera Labs',
     text: 'As a frontend engineer, I collaborated closely with Kristína and I can confidently say she\'s an exceptional UI/UX lead designer. She has an incredible eye for detail and a knack for creating intuitive designs. Her creativity and user-focused approach consistently elevated our projects. Plus, she\'s a fantastic team player — always open to feedback and ready to brainstorm solutions.',
+    tags: ['UI/UX', 'Collaboration', 'Attention to detail', 'Teamwork', 'Seqera'],
   },
   {
     name: 'Santhosh Punniyamurthy',
     role: 'Product, Aarini | Ex-Siemens Gamesa',
     text: 'If I ever do a startup and have to collaborate with a UX architect, it\'s Kristína. She has this amazing ability to push the boundaries of the product, the user experience and the team as well. Working with her has been such a wonderful learning and fun experience for me. Her work ethics are an inspiration.',
+    tags: ['UX architecture', 'Innovation', 'Teamwork', 'Siemens Gamesa', 'Startup'],
   },
   {
     name: 'Vittal Prabhu',
     role: 'Agile Delivery Manager, Siemens Gamesa',
     text: 'Kristína is an amiable, analytical UI/UX architect with a holistic approach towards developing user interface and user experience. She does this with such clarity without compromising on ease of use while maintaining simplicity. She always manages to ask the right questions and makes sure information trickles down to Dev in the best possible way.',
+    tags: ['UX architecture', 'Communication', 'Dev handoff', 'Siemens Gamesa', 'Clarity'],
   },
 ];
 function Testimonials() {
@@ -1000,11 +1110,10 @@ function Marquee() {
 // ── Experience data ─────────────────────────────────────────────────────
 const EXP = [
   {
-    role:'AI-driven Design & Innovation Lead', co:'Freelance', period:'2026–', tags:'Worldwide', roleTag:'lead', worldwide:true,
-    desc:'Contribute to AI-driven product development, scalable design systems, and end-to-end product operations that enable efficient, high-quality delivery at scale for various clients.',
+    role:'Founder and Designer', co:'Nilo Studio', period:'Mar 2026–', tags:'Spain · Remote', roleTag:'lead', worldwide:true,
+    desc:'Leads an AI-driven studio creating brand transformations and digital products through scalable, AI-enabled operations.',
     points:[
       'Builds and optimizes collaborative, cross-functional workflows that connect product, design, brand, research, and content teams.',
-      'Drives creative production pipelines across video, image, illustration, and motion, ensuring consistency and scalability.',
       'Defines and evolves AI-native product development lifecycles spanning ideation, research, design, content generation, testing, and iteration.',
     ],
   },
@@ -1215,6 +1324,32 @@ function ProjectTabs({ scale, pillars, methods, outcomes }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── ThemeToggle ──────────────────────────────────────────────────────────
+function ThemeToggle({ theme, onToggle }) {
+  const isDark = theme === 'dark';
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{
+        position:'fixed', top:16, right:24, zIndex:998,
+        display:'flex', alignItems:'center', gap:6,
+        background:'var(--bg2)', border:'1px solid var(--border)',
+        borderRadius:24, padding:'6px 10px',
+        cursor:'pointer', transition:'border-color .15s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.borderColor='var(--ink3)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}
+    >
+      <span style={{ fontSize:13, lineHeight:1, color:'var(--ink)', opacity: isDark ? 0.4 : 1, transition:'opacity .2s' }}>☀</span>
+      <div style={{ position:'relative', width:32, height:18, borderRadius:9, background:'var(--ink)', flexShrink:0 }}>
+        <div style={{ position:'absolute', top:3, left: isDark ? 14 : 2, width:12, height:12, borderRadius:'50%', background:'var(--bg)', boxShadow:'0 1px 4px rgba(0,0,0,.25)', transition:'left .2s' }} />
+      </div>
+      <span style={{ fontSize:13, lineHeight:1, color:'var(--ink)', opacity: isDark ? 1 : 0.4, transition:'opacity .2s' }}>☾</span>
+    </button>
   );
 }
 
@@ -1437,127 +1572,91 @@ const ALL_MAP_LOCATIONS = [
   { key:'toronto',   name:'Toronto',   coords:[43.6532, -79.3832] },
 ];
 
+// Equirectangular full-world projection (map.svg covers lng -180→180, lat -90→90)
+function toXY([lat, lng]) {
+  const x = (lng + 180) / 360 * 100;
+  const y = (90 - lat) / 180 * 100;
+  return { x, y };
+}
+
 function WorkMap({ filteredExp, highlightLocs }) {
-  const containerRef = React.useRef(null);
-  const mapRef = React.useRef(null);
-  const markersRef = React.useRef([]);
+  const showAll = !filteredExp || filteredExp.some(e => e.worldwide);
+  const visibleKeys = showAll ? null : new Set(filteredExp.flatMap(e => e.locs || []));
+  const toShow = showAll ? ALL_MAP_LOCATIONS : ALL_MAP_LOCATIONS.filter(l => visibleKeys.has(l.key));
+  const hasHighlight = highlightLocs && highlightLocs.length > 0;
 
-  const makeIcon = (highlighted, dimmed) => L.divIcon({
-    className: '',
-    html: highlighted
-      ? `<div style="width:14px;height:14px;border-radius:50%;background:#2C22E9;border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,.4)"></div>`
-      : `<div style="width:10px;height:10px;border-radius:50%;background:#2C22E9;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:${dimmed ? 0.25 : 1}"></div>`,
-    iconSize: highlighted ? [14, 14] : [10, 10],
-    iconAnchor: highlighted ? [7, 7] : [5, 5],
-  });
-
-  // Init map once
-  React.useEffect(() => {
-    if (mapRef.current || !containerRef.current) return;
-    const map = L.map(containerRef.current, {
-      center: [42, 8], zoom: 3,
-      zoomControl: false, scrollWheelZoom: false,
-      attributionControl: false, dragging: true,
-    });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-    mapRef.current = map;
-  }, []);
-
-  // Update markers when filter or highlight changes
-  React.useEffect(() => {
-    if (!mapRef.current) return;
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    const showAll = !filteredExp || filteredExp.some(e => e.worldwide);
-    const visibleKeys = showAll ? null : new Set(filteredExp.flatMap(e => e.locs || []));
-    const toShow = showAll ? ALL_MAP_LOCATIONS : ALL_MAP_LOCATIONS.filter(l => visibleKeys.has(l.key));
-    const hasHighlight = highlightLocs && highlightLocs.length > 0;
-
-    toShow.forEach(loc => {
-      const isHighlighted = hasHighlight && highlightLocs.includes(loc.key);
-      const isDimmed = hasHighlight && !isHighlighted;
-      const icon = makeIcon(isHighlighted, isDimmed);
-      const m = L.marker(loc.coords, { icon })
-        .addTo(mapRef.current)
-        .bindTooltip(loc.name, { permanent: isHighlighted || !hasHighlight, direction:'top', offset:[0, isHighlighted ? -12 : -10], className:'map-tooltip' })
-        .openTooltip();
-      markersRef.current.push(m);
-    });
-  }, [filteredExp, highlightLocs]);
-
-  return <div ref={containerRef} style={{ width:'100%', height:'100%', minHeight:400, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)' }} />;
+  return (
+    <div style={{ position:'relative', width:'100%', height:'100%', minHeight:400, borderRadius:16, overflow:'hidden', border:'1px solid var(--border)', background:'var(--bg2)' }}>
+      <img src="map.svg" alt="" draggable="false"
+        style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block', userSelect:'none' }} />
+      {toShow.map(loc => {
+        const { x, y } = toXY(loc.coords);
+        const isHighlighted = hasHighlight && highlightLocs.includes(loc.key);
+        const isDimmed = hasHighlight && !isHighlighted;
+        const showLabel = isHighlighted || !hasHighlight;
+        return (
+          <div key={loc.key} style={{ position:'absolute', left:`${x}%`, top:`${y}%`, transform:'translate(-50%,-50%)', opacity: isDimmed ? 0.2 : 1, transition:'opacity .2s', pointerEvents:'none' }}>
+            <div style={{
+              width: isHighlighted ? 14 : 10,
+              height: isHighlighted ? 14 : 10,
+              borderRadius:'50%',
+              background:'var(--accent)',
+              border:`${isHighlighted ? 3 : 2}px solid var(--bg)`,
+              boxShadow:'0 2px 8px rgba(0,0,0,.3)',
+              transition:'all .2s',
+            }} />
+            {showLabel && (
+              <div style={{
+                position:'absolute', bottom:'calc(100% + 5px)', left:'50%', transform:'translateX(-50%)',
+                background:'var(--ink)', color:'var(--bg)',
+                fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.05em',
+                padding:'3px 8px', borderRadius:6, whiteSpace:'nowrap',
+                boxShadow:'0 2px 8px rgba(0,0,0,.18)',
+              }}>{loc.name}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 // ── Process Section ───────────────────────────────────────────────────────
 function ProcessSection() {
-  const [withAI, setWithAI] = React.useState(false);
   const [activeStep, setActiveStep] = React.useState(0);
 
   const steps = [
-    { num:'01', title:'Discover', desc:'Understand the problem space through research, observation, and stakeholder engagement before defining any direction.',
-      methods:['Benchmarking','Interviews','Stakeholder management','Workshops','Data analysis','Surveys','Contextual inquiry','Desk research','Competitive analysis','Heuristic review'],
-      aiMethods:['Competitive AI benchmarking','Capability assessment','Ethical scoping','Rapid research synthesis','Scrape or query datasets for desk research','AI opportunity mapping across user journeys'],
-      withAIView:{
-        replaced:['Desk research','Scrape or query datasets for desk research'],
-        augmented:['Competitive analysis','Heuristic review','Rapid research synthesis','Competitive AI benchmarking'],
-        human:['Interviews','Stakeholder management','Workshops','Contextual inquiry','Capability assessment','AI opportunity mapping across user journeys'],
-      }},
-    { num:'02', title:'Define', desc:'Synthesise findings into a clear problem statement, opportunity framing, and shared understanding of user needs.',
-      methods:['Insight synthesis','How might we','Jobs to be done','Personas','Journey mapping','Problem framing','PRDs'],
-      aiMethods:['AI use case definition','Human-AI interaction modelling','Edge case scoping','Cluster and theme research findings','Defining eval criteria alongside problem statements'],
-      withAIView:{
-        replaced:['Insight synthesis','Cluster and theme research findings'],
-        augmented:['AI use case definition','Defining eval criteria alongside problem statements','PRDs','Problem framing','Human-AI interaction modelling','Edge case scoping'],
-        human:['Jobs to be done','How might we','Personas','Journey mapping'],
-      }},
-    { num:'03', title:'Ideate', desc:'Generate a wide range of ideas before converging on the most promising directions.',
-      methods:['Brainstorming','Design sprints','Concept sketching','Prioritisation','Co-creation workshops','Storyboarding'],
-      aiMethods:['Rapidly generate and stress-test concepts','Prompt strategy exploration as part of concept work','Agent behaviour definitions','Mapping model capabilities to experience opportunities'],
-      withAIView:{
-        replaced:['Brainstorming','Rapidly generate and stress-test concepts','Prompt strategy exploration as part of concept work'],
-        augmented:['Concept sketching','Storyboarding','Mapping model capabilities to experience opportunities'],
-        human:['Design sprints','Co-creation workshops','Agent behaviour definitions','Prioritisation'],
-      }},
-    { num:'04', title:'Prototype', desc:'Build tangible representations of ideas to test and communicate at the right fidelity.',
-      methods:['Interactive prototypes','Design systems','Service blueprints','Content design','Accessibility review'],
-      aiMethods:['Generate workable prototypes','Generate UI components and patterns','Define skills and hooks','Conversational UX prototyping','Building and test lightweight tools','Shipping actual products and websites'],
-      withAIView:{
-        replaced:['Wireframes','Generate workable prototypes','Generate UI components and patterns','Building and test lightweight tools','Shipping actual products and websites'],
-        augmented:['Interactive prototypes','Content design','Conversational UX prototyping','Define skills and hooks','Design systems','Accessibility review'],
-        human:['Service blueprints'],
-      }},
-    { num:'05', title:'Test & Iterate', desc:'Validate with real users, gather evidence, and refine.',
-      methods:['Usability testing','A/B testing','Benchmarking','Review','Data analysis'],
-      aiMethods:['AI output testing','Bias assessment','Human-in-the-loop review','Analyse test findings and surface patterns','Running structured evals on model behaviour'],
-      withAIView:{
-        replaced:['Data analysis','Analyse test findings and surface patterns','AI output testing'],
-        augmented:['Benchmarking','Running structured evals on model behaviour','Bias assessment'],
-        human:['Usability testing','A/B testing','Review'],
-      }},
-    { num:'06', title:'Deliver', desc:'Smooth handoff to engineering, updated design system components and documentation, decisions preserved and scalable.',
-      methods:['Design–dev handoff','Design system updates','Component documentation','Annotation & specs','Guidelines & standards','QA & design review','PRDs'],
-      aiMethods:['AI pattern library updates','Prompt and tone guidelines','Governance documentation','Generate production-ready components','Skills and hooks documentation'],
-      withAIView:{
-        replaced:['Design system updates','Component documentation','Annotation & specs','AI pattern library updates','Generate production-ready components','Skills and hooks documentation'],
-        augmented:['Design–dev handoff','Prompt and tone guidelines','QA & design review'],
-        human:['Guidelines & standards','Governance documentation'],
-      }},
+    { num:'01', title:'Define', desc:'Start with deep research to understand competitors, constraints, and users. Synthesise everything into a PRD that every subsequent AI step reads from as its source of truth.',
+      ai:['Competitive benchmarking','Desk research','PRD generation','AI opportunity mapping'],
+      human:['Stakeholder interviews','Problem framing','Success metrics','Scope decisions'],
+    },
+    { num:'02', title:'Design', desc:'Map the end-to-end journey and user flows, then build a coded prototype using real design-system components. Iterate until every flow, state and edge case is covered. Annotated Figma frames become the visual record — code stays the source of truth.',
+      ai:['Coded prototype generation','Edge case iteration','Figma annotation','Component generation'],
+      human:['Journey architecture','Flow decisions','Design direction','Quality bar'],
+    },
+    { num:'03', title:'Test & Review', desc:'Validate the working prototype with real users and run an engineer feasibility check. Gate: design sign-off before anything moves to handoff.',
+      ai:['Finding synthesis','Pattern analysis','Accessibility pre-check'],
+      human:['Usability sessions','Stakeholder review','Engineer feasibility','Sign-off decision'],
+    },
+    { num:'04', title:'Handoff', desc:'Ship the handoff package: prototype code branch, annotated Figma frames, brief + acceptance criteria. Engineering either rebuilds from the prototype as a living reference, or hardens the prototype branch directly.',
+      ai:['AC generation from PRD','Figma frame annotation','Decision summaries'],
+      human:['Branch strategy choice','Handoff review','Stakeholder sign-off'],
+    },
+    { num:'05', title:'Develop', desc:'Engineering connects real data, handles state and error flows, and writes unit and integration tests alongside the code. Gate: PR reviewed and approved by another developer before merging.',
+      ai:['Code review assistance','Test scaffolding','Performance analysis'],
+      human:['Architecture decisions','PR review','Data contracts','Security review'],
+    },
+    { num:'06', title:'QA', desc:'AI reviews for accessibility, SEO, and design system compliance using skills from the repo. Manual testing covers real devices and the tricky edge flows. Gate: QA + PM go / no-go before release.',
+      ai:['Accessibility audit','SEO checks','Design system compliance scan'],
+      human:['Real device testing','Screen reader flows','Edge case exploration','PM sign-off'],
+    },
   ];
 
   const active = steps[activeStep];
 
   return (
     <div>
-      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
-        <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase' }}>Process</div>
-        <div onClick={() => setWithAI(v => !v)} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-          <div style={{ position:'relative', width:36, height:20, borderRadius:10, background: withAI ? 'var(--accent)' : 'var(--border)', transition:'background .2s', flexShrink:0 }}>
-            <div style={{ position:'absolute', top:3, left: withAI ? 19 : 3, width:14, height:14, borderRadius:'50%', background:'white', boxShadow:'0 1px 4px rgba(0,0,0,.2)', transition:'left .2s' }} />
-          </div>
-          <span style={{ fontFamily:'var(--mono)', fontSize:11, color: withAI ? 'var(--accent)' : 'var(--ink3)', letterSpacing:'.04em', transition:'color .2s' }}>With AI</span>
-        </div>
-      </div>
+      <div style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:32 }}>Process</div>
 
       {/* Step tabs */}
       <div style={{ display:'flex', alignItems:'stretch', border:'1px solid var(--border)', borderRadius:'14px 14px 0 0', overflow:'hidden', borderBottom:'none' }}>
@@ -1565,14 +1664,14 @@ function ProcessSection() {
           <React.Fragment key={i}>
             <div onClick={() => setActiveStep(i)} style={{
               flex:1, cursor:'pointer', padding:'20px 14px', textAlign:'center',
-              background: activeStep === i ? 'var(--ink)' : 'transparent',
-              transition:'all .18s',
+              background: activeStep === i ? 'var(--accent)' : 'transparent',
+              transition:'background .18s',
             }}
               onMouseEnter={e => { if (activeStep !== i) e.currentTarget.style.background='var(--bg2)'; }}
               onMouseLeave={e => { if (activeStep !== i) e.currentTarget.style.background='transparent'; }}
             >
-              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'var(--bg)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
-              <div style={{ fontSize:15, fontWeight:600, color: activeStep === i ? 'var(--bg)' : 'var(--ink)', lineHeight:1.25 }}>{step.title}</div>
+              <div style={{ fontFamily:'var(--mono)', fontSize:10, color: activeStep === i ? 'rgba(255,255,255,0.6)' : 'var(--accent)', marginBottom:8, letterSpacing:'.08em' }}>{step.num}</div>
+              <div style={{ fontSize:15, fontWeight:600, color: activeStep === i ? 'white' : 'var(--ink)', lineHeight:1.25 }}>{step.title}</div>
             </div>
             {i < steps.length - 1 && (
               <div style={{ display:'flex', alignItems:'center', padding:'0 2px', color:'var(--border)', fontSize:14, flexShrink:0 }}>→</div>
@@ -1586,35 +1685,47 @@ function ProcessSection() {
         <div>
           <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.8, textWrap:'pretty' }}>{active.desc}</p>
         </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {[
+            { key:'ai',    label:'AI-augmented', tagStyle:{ color:'var(--accent)', border:'1px solid var(--accent)', background:'transparent' } },
+            { key:'human', label:'Human-led',    tagStyle:{ color:'var(--ink2)',   border:'1px solid var(--border)', background:'var(--bg)' } },
+          ].map(({ key, label, tagStyle }) => active[key]?.length > 0 && (
+            <div key={key}>
+              <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.07em', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                {active[key].map((m, i) => (
+                  <span key={i} style={{ fontFamily:'var(--mono)', fontSize:10, borderRadius:20, padding:'3px 10px', ...tagStyle }}>{m}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Design system foundation */}
+      <div style={{ marginTop:12, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:12, padding:'20px 28px', display:'grid', gridTemplateColumns:'240px 1fr', gap:32, alignItems:'center' }}>
         <div>
-          {withAI && active.withAIView ? (
-            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              {[
-                { key:'augmented', label:'Augmented',
-                  style:{ color:'var(--accent)', border:'1px solid rgba(44,34,233,0.4)', background:'rgba(44,34,233,0.06)' } },
-                { key:'human', label:'Human-led',
-                  style:{ color:'var(--ink2)', border:'1px solid var(--border)', background:'var(--bg)' } },
-              ].map(({ key, label, style }) => active.withAIView[key]?.length > 0 && (
-                <div key={key}>
-                  <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.07em', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-                    {active.withAIView[key].map((m,i) => (
-                      <span key={i} style={{ fontFamily:'var(--mono)', fontSize:10, borderRadius:20, padding:'3px 10px', ...style }}>{m}</span>
-                    ))}
+          <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)', marginBottom:6 }}>Design system · foundation</div>
+          <p style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', lineHeight:1.7, margin:0 }}>Set up once, maintained continuously. Every stage above reads from it. GitHub is the source of truth for code, rules and skills.</p>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:2 }}>
+          {[
+            { loc:'Lives in Figma', items:[{ label:'Figma library', sub:'components designers use' }, { label:'Variables', sub:'color, type, spacing' }] },
+            { loc:'Connects them',  items:[{ label:'Figma MCP', sub:'AI editors read Figma' }] },
+            { loc:'Lives in GitHub · DS repo', items:[{ label:'Components + Storybook', sub:'/src, /stories' }, { label:'Tokens as code', sub:'synced from Figma variables' }, { label:'Code Connect files', sub:'*.figma.tsx' }] },
+          ].map((col, ci) => (
+            <div key={ci} style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px' }}>
+              <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>{col.loc}</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {col.items.map((item, ii) => (
+                  <div key={ii} style={{ background:'var(--bg)', border:'1px solid var(--border)', borderRadius:5, padding:'6px 10px' }}>
+                    <div style={{ fontSize:11, fontWeight:500, color:'var(--ink)' }}>{item.label}</div>
+                    <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', marginTop:2 }}>{item.sub}</div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          ) : (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {active.methods.map((m,k) => (
-                <span key={k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink2)', border:'1px solid var(--border)', borderRadius:20, padding:'3px 10px', background:'var(--bg)' }}>{m}</span>
-              ))}
-              {withAI && active.aiMethods.map((m,k) => (
-                <span key={'ai-'+k} style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--accent)', border:'1px solid var(--accent)', borderRadius:20, padding:'3px 10px', background:'rgba(44,34,233,0.08)' }}>{m}</span>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       </div>
     </div>
@@ -1631,7 +1742,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
     <div style={{ paddingTop:48, paddingBottom:96 }}>
 
       {/* Header */}
-      <div style={{ marginBottom:44 }}>
+      <div style={{ marginBottom:44, animation:'cardEnter 0.45s ease both' }}>
         <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:20 }}>About</div>
         <div className="about-grid" style={{ display:'grid', gridTemplateColumns:'1fr minmax(0, 360px)', gap:56 }}>
 
@@ -1697,6 +1808,7 @@ function AboutPage({ onNavigate, expFilter, setExpFilter }) {
               borderRight: i%2===0 ? '1px solid var(--border)' : 'none',
               borderBottom: i<4 ? '1px solid var(--border)' : 'none',
               background:'var(--bg)',
+              animation:'cardEnter 0.45s ease both', animationDelay:`${0.15 + i * 0.08}s`,
             }}>
               <div style={{ fontSize:18, color:'var(--accent)', marginBottom:12 }}>{s.icon}</div>
               <h3 style={{ fontSize:15, fontWeight:600, marginBottom:8 }}>{s.title}</h3>
@@ -2058,6 +2170,7 @@ function WritingPage() {
               onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
               className="writing-card"
               style={{
+                animation:'cardEnter 0.45s ease both', animationDelay:`${i * 0.1}s`,
                 display:'grid', gridTemplateColumns:'220px 1fr', gap:32,
                 padding:28, borderRadius:20, border:'1px solid var(--border)',
                 background: hov ? 'var(--bg2)' : 'var(--bg)',
@@ -2102,6 +2215,111 @@ function WritingPage() {
         })}
       </div>
 
+    </div>
+  );
+}
+
+// ── Search ────────────────────────────────────────────────────────────────
+function buildSearchIndex() {
+  const entries = [];
+  EXP.forEach(e => {
+    entries.push({
+      page: 'experience',
+      section: 'Experience',
+      title: `${e.role} · ${e.co}`,
+      snippet: e.desc,
+      keywords: [e.role, e.co, e.desc, ...(e.points||[]), e.tags||''].join(' ').toLowerCase(),
+    });
+  });
+  WORK.forEach(w => {
+    entries.push({
+      page: 'work',
+      section: 'Work · ' + w.title,
+      title: w.title,
+      snippet: w.desc,
+      keywords: [w.title, w.desc, ...(w.companies||[])].join(' ').toLowerCase(),
+    });
+    (w.detail?.projects||[]).forEach(p => {
+      entries.push({
+        page: 'work',
+        section: 'Work · ' + w.title,
+        title: p.name,
+        snippet: p.desc,
+        keywords: [p.name, p.desc, p.company||'', ...(p.tags||[])].join(' ').toLowerCase(),
+      });
+    });
+  });
+  TESTIMONIALS.forEach(t => {
+    entries.push({
+      page: 'home',
+      section: 'Kind words',
+      title: `${t.name} — ${t.role}`,
+      snippet: t.text.slice(0, 120) + '…',
+      keywords: [t.name, t.role, t.text, ...(t.tags||[]), 'recommendation review testimonial kind words'].join(' ').toLowerCase(),
+    });
+  });
+  WRITING.forEach(w => {
+    entries.push({
+      page: 'writing',
+      section: 'Writing · ' + w.category,
+      title: w.title,
+      snippet: w.excerpt,
+      keywords: [w.title, w.excerpt, w.category, 'article blog medium writing'].join(' ').toLowerCase(),
+    });
+  });
+  return entries;
+}
+const SEARCH_INDEX = buildSearchIndex();
+
+function SearchSection({ onNavigate }) {
+  const [query, setQuery] = React.useState('');
+  const results = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return SEARCH_INDEX.filter(e => e.keywords.includes(q)).slice(0, 8);
+  }, [query]);
+
+  return (
+    <div style={{ marginTop:48, width:'100%' }}>
+      <div style={{ height:1, background:'var(--border)', marginBottom:40 }} />
+      <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--ink3)', letterSpacing:'.1em', textTransform:'uppercase', marginBottom:14 }}>Search portfolio</div>
+      <div style={{ position:'relative' }}>
+        <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'var(--ink3)', fontSize:15, pointerEvents:'none' }}>⌕</span>
+        <input
+          type="text"
+          placeholder="Search skills, projects, experience..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          style={{
+            width:'100%', boxSizing:'border-box',
+            padding:'12px 16px 12px 40px',
+            border:'1px solid var(--border)', borderRadius:10,
+            background:'var(--bg2)', color:'var(--ink)',
+            fontSize:14, fontFamily:'var(--sans)', outline:'none',
+          }}
+        />
+      </div>
+      {results.length > 0 && (
+        <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:8 }}>
+          {results.map((r, i) => (
+            <div key={i} onClick={() => onNavigate(r.page)}
+              style={{ padding:'14px 16px', border:'1px solid var(--border)', borderRadius:10, cursor:'pointer', background:'var(--bg)', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, transition:'border-color .15s', textAlign:'left' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor='var(--ink3)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}
+            >
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>{r.section}</div>
+                <div style={{ fontSize:14, fontWeight:500, color:'var(--ink)', marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.title}</div>
+                <div style={{ fontSize:12, color:'var(--ink2)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.snippet}</div>
+              </div>
+              <span style={{ fontSize:12, color:'var(--ink3)', flexShrink:0, marginTop:2 }}>Go →</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {query.trim().length >= 2 && results.length === 0 && (
+        <div style={{ marginTop:12, fontSize:13, color:'var(--ink3)', fontFamily:'var(--mono)' }}>No results found.</div>
+      )}
     </div>
   );
 }
@@ -2236,9 +2454,23 @@ function StaggerChildren({ children, startDelay = 0, skip = false }) {
   return <div className="page-enter" ref={ref}>{children}</div>;
 }
 
+// ── Theme ────────────────────────────────────────────────────────────────
+function useTheme() {
+  const [theme, setTheme] = React.useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  return { theme, toggle };
+}
+
 // ── App ─────────────────────────────────────────────────────────────────
 function App() {
   const tweaks = useTweaks();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [activePage, setActivePage] = useState('home');
   const [openItem, setOpenItem] = useState(null);
   const [introPlayed, setIntroPlayed] = useState(false);
@@ -2251,7 +2483,8 @@ function App() {
 
   return (
     <>
-      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} introPlayed={introPlayed} />
+      {introPlayed && !openItem && <ThemeToggle theme={theme} onToggle={toggleTheme} />}
+      <Sidebar activePage={activePage} onNavigate={navigate} onOpenWork={setOpenItem} introPlayed={introPlayed} theme={theme} onToggleTheme={toggleTheme} />
       <div className="sidebar-layout" style={{ marginLeft:240, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
         <div style={{ padding:'0 40px', flex:1 }}>
 
