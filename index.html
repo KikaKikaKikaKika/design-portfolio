@@ -1591,7 +1591,7 @@ function WorkMap({ filteredExp, highlightLocs }) {
   React.useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
     const map = L.map(containerRef.current, {
-      center: [48, 18], zoom: 3,
+      center: [38, -12], zoom: 2,
       zoomControl: false, scrollWheelZoom: false,
       attributionControl: false, dragging: true,
     });
@@ -1631,6 +1631,7 @@ function WorkMap({ filteredExp, highlightLocs }) {
 // ── Process Section ───────────────────────────────────────────────────────
 function ProcessSection() {
   const [activeStep, setActiveStep] = React.useState(0);
+  const [dsOpen, setDsOpen] = React.useState(false);
 
   const steps = [
     { num:'01', title:'Define', desc:'Start with deep research to understand competitors, constraints, and users. Synthesise everything into a PRD that every subsequent AI step reads from as its source of truth.',
@@ -1639,23 +1640,23 @@ function ProcessSection() {
     },
     { num:'02', title:'Design', desc:'Map the end-to-end journey and user flows, then build a coded prototype using real design-system components. Iterate until every flow, state and edge case is covered. Annotated Figma frames become the visual record — code stays the source of truth.',
       ai:['Coded prototype generation','Edge case iteration','Figma annotation','Component generation'],
-      human:['Journey architecture','Flow decisions','Design direction','Quality bar'],
+      human:['Journey mapping','User flow design','Design direction','Quality bar'],
     },
     { num:'03', title:'Test & Review', desc:'Validate the working prototype with real users and run an engineer feasibility check. Gate: design sign-off before anything moves to handoff.',
-      ai:['Finding synthesis','Pattern analysis','Accessibility pre-check'],
+      ai:['Finding synthesis','Pattern analysis','Accessibility pre-check','SEO pre-check'],
       human:['Usability sessions','Stakeholder review','Engineer feasibility','Sign-off decision'],
     },
     { num:'04', title:'Handoff', desc:'Ship the handoff package: prototype code branch, annotated Figma frames, brief + acceptance criteria. Engineering either rebuilds from the prototype as a living reference, or hardens the prototype branch directly.',
-      ai:['AC generation from PRD','Figma frame annotation','Decision summaries'],
+      ai:['Figma frame annotation','Decision summaries'],
       human:['Branch strategy choice','Handoff review','Stakeholder sign-off'],
     },
     { num:'05', title:'Develop', desc:'Engineering connects real data, handles state and error flows, and writes unit and integration tests alongside the code. Gate: PR reviewed and approved by another developer before merging.',
       ai:['Code review assistance','Test scaffolding','Performance analysis'],
-      human:['Architecture decisions','PR review','Data contracts','Security review'],
+      human:['Architecture decisions','Data contracts','Security review'],
     },
     { num:'06', title:'QA', desc:'AI reviews for accessibility, SEO, and design system compliance using skills from the repo. Manual testing covers real devices and the tricky edge flows. Gate: QA + PM go / no-go before release.',
       ai:['Accessibility audit','SEO checks','Design system compliance scan'],
-      human:['Real device testing','Screen reader flows','Edge case exploration','PM sign-off'],
+      human:['Real device testing','Screen reader flows','PM sign-off'],
     },
   ];
 
@@ -1710,30 +1711,40 @@ function ProcessSection() {
       </div>
 
       {/* Design system foundation */}
-      <div style={{ marginTop:12, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:12, padding:'20px 28px', display:'grid', gridTemplateColumns:'240px 1fr', gap:32, alignItems:'center' }}>
-        <div>
-          <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)', marginBottom:6 }}>Design system · foundation</div>
-          <p style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink3)', lineHeight:1.7, margin:0 }}>Set up once, maintained continuously. Every stage above reads from it. GitHub is the source of truth for code, rules and skills.</p>
+      <div style={{ marginTop:12, background: dsOpen ? 'var(--accent)' : 'var(--bg)', border:'1px solid var(--border)', borderRadius:12, overflow:'hidden', transition:'background 0.2s ease' }}>
+        {/* Header row — always visible */}
+        <div onClick={() => setDsOpen(!dsOpen)} style={{ padding:'16px 24px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+          <div>
+            <div style={{ fontSize:14, fontWeight:600, color: dsOpen ? 'white' : 'var(--ink)', marginBottom:4 }}>Design system · foundation</div>
+            <p style={{ fontFamily:'var(--mono)', fontSize:10, color: dsOpen ? 'rgba(255,255,255,0.65)' : 'var(--ink3)', lineHeight:1.6, margin:0 }}>Set up once, maintained continuously. Every stage above reads from it. GitHub is the source of truth for code, rules and skills.</p>
+          </div>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
+            style={{ flexShrink:0, transform:dsOpen?'rotate(180deg)':'rotate(0)', transition:'transform 0.22s ease', color: dsOpen ? 'rgba(255,255,255,0.7)' : 'var(--ink3)' }}>
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:2 }}>
-          {[
-            { loc:'Lives in Figma', items:[{ label:'Figma library', sub:'components designers use' }, { label:'Variables', sub:'color, type, spacing' }] },
-            { loc:'Connects them',  items:[{ label:'Figma MCP', sub:'AI editors read Figma' }] },
-            { loc:'Lives in GitHub · DS repo', items:[{ label:'Components + Storybook', sub:'/src, /stories' }, { label:'Tokens as code', sub:'synced from Figma variables' }, { label:'Code Connect files', sub:'*.figma.tsx' }] },
-          ].map((col, ci) => (
-            <div key={ci} style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px' }}>
-              <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>{col.loc}</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {col.items.map((item, ii) => (
-                  <div key={ii} style={{ background:'var(--bg)', border:'1px solid var(--border)', borderRadius:5, padding:'6px 10px' }}>
-                    <div style={{ fontSize:11, fontWeight:500, color:'var(--ink)' }}>{item.label}</div>
-                    <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', marginTop:2 }}>{item.sub}</div>
-                  </div>
-                ))}
+        {/* Expandable content */}
+        {dsOpen && (
+          <div style={{ background:'var(--bg2)', padding:'16px 24px 20px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:2 }}>
+            {[
+              { loc:'Lives in Figma', items:[{ label:'Figma library', sub:'components designers use' }, { label:'Variables', sub:'color, type, spacing' }] },
+              { loc:'Connects them',  items:[{ label:'Figma MCP', sub:'AI editors read Figma' }] },
+              { loc:'Lives in GitHub · DS repo', items:[{ label:'Components + Storybook', sub:'/src, /stories' }, { label:'Tokens as code', sub:'synced from Figma variables' }, { label:'Code Connect files', sub:'*.figma.tsx' }] },
+            ].map((col, ci) => (
+              <div key={ci} style={{ background:'transparent', border:'none', borderRadius:8, padding:'12px 14px' }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10 }}>{col.loc}</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  {col.items.map((item, ii) => (
+                    <div key={ii} style={{ background:'var(--bg)', border:'1px solid var(--border)', borderRadius:5, padding:'6px 10px' }}>
+                      <div style={{ fontSize:11, fontWeight:500, color:'var(--ink)' }}>{item.label}</div>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:9, color:'var(--ink3)', marginTop:2 }}>{item.sub}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2101,7 +2112,7 @@ function ExperiencePage({ expFilter, setExpFilter }) {
               { text:'Teams & ops setup',        count:'×4' },
               { text:'Design systems',           count:'×5' },
               { text:'Content guidelines',       count:'×2' },
-              { text:'Company rebrand',          note:'Seqera' },
+              { text:'Company rebrand',          count:'×2' },
               { text:'Product rebrands',         count:'×3' },
               { text:'Service Design initiatives' },
               { text:'User Research activities' },
