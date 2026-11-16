@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Preview — Kristína</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      oklch(99%   0.002 192);
+      --bg2:     oklch(96.5% 0.004 192);
+      --ink:     oklch(14%   0.008 192);
+      --ink2:    oklch(42%   0.006 192);
+      --ink3:    oklch(62%   0.004 192);
+      --accent:  #2C22E9;
+      --border:  oklch(89%   0.005 192);
+      --mono:    'DM Mono', monospace;
+      --sans:    'Barlow', sans-serif;
+      --display: 'Impact', 'Arial Narrow', sans-serif;
+    }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, h5, h6 { font-family: var(--display); }
+
+    @keyframes dot-pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(.75); }
+    }
+    .dot-pulse {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--accent);
+      animation: dot-pulse 2s ease-in-out infinite;
+    }
+
+    /* ── Blue intro screen ───────────────────────────────────────── */
+    #splash-bg {
+      position: fixed;
+      inset: 0;
+      background: var(--accent);
+      z-index: 60;
+      opacity: 1;
+      will-change: opacity;
+    }
+
+    /* ── Big "Welcome" word (lives on top, travels to heading) ───── */
+    #splash-word {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.88);
+      font-family: var(--display);
+      font-size: clamp(90px, 18vw, 240px);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: #ffffff;
+      white-space: nowrap;
+      z-index: 70;
+      pointer-events: none;
+      will-change: transform, opacity, color;
+      opacity: 0;
+    }
+
+    /* ── Sidebar (structure always present, content fades in) ────── */
+    aside {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 240px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 16px 24px;
+      z-index: 10;
+      overflow-y: auto;
+    }
+    .s-logo {
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      color: var(--ink);
+      padding: 0 8px;
+      line-height: 1.2;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .s-logo.in { opacity: 1; }
+    .s-tagline {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 4px;
+      padding: 0 8px;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.08s;
+    }
+    .s-tagline.in { opacity: 1; }
+    .s-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .s-divider.in { opacity: 1; }
+    nav { flex: 1; }
+    .nav-item {
+      display: block;
+      padding: 9px 12px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      font-size: 14px;
+      color: var(--ink2);
+      text-decoration: none;
+      transition: background .15s, color .15s, opacity 0.35s ease, transform 0.35s ease;
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    .nav-item:hover { background: var(--bg2); color: var(--ink); }
+    .nav-item.active { font-weight: 500; color: var(--ink); background: var(--bg2); }
+    .nav-item.in { opacity: 1; transform: translateX(0); }
+    .s-stats {
+      margin-top: 24px;
+      background: var(--ink);
+      color: oklch(84% 0.01 78);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.85;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .s-stats.in { opacity: 1; }
+    .s-stats .hi { color: var(--bg); }
+    .s-stats .lo { color: oklch(55% 0.01 78); }
+    .s-avail { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── Main content ────────────────────────────────────────────── */
+    .main { margin-left: 240px; min-height: 100vh; display: flex; flex-direction: column; }
+    .main-inner { padding: 0 40px; flex: 1; }
+    .hero-section { padding-top: 48px; padding-bottom: 96px; }
+    .hero-cols { display: flex; gap: 56px; align-items: stretch; flex-wrap: wrap; }
+    .hero-left { flex: 1 1 380px; }
+
+    /* Available badge */
+    .available-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px solid rgba(44,34,233,0.45);
+      border-radius: 20px;
+      padding: 5px 12px;
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .available-badge.in { opacity: 1; transform: translateY(0); }
+
+    /* The heading that Welcome morphs into */
+    .hero-heading {
+      font-family: var(--display);
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 300;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      color: var(--ink);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .hero-heading.in { opacity: 1; }
+
+    /* Paragraph lines */
+    .intro-p {
+      font-size: 15.5px;
+      color: var(--ink2);
+      line-height: 1.78;
+      max-width: 500px;
+      text-wrap: pretty;
+      margin-bottom: 24px;
+    }
+    .p-line {
+      display: block;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+    .p-line.in { opacity: 1; transform: translateY(0); }
+
+    /* Buttons */
+    .hero-btns {
+      margin-top: 32px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .hero-btns.in { opacity: 1; transform: translateY(0); }
+    .btn-primary {
+      background: var(--ink); color: var(--bg);
+      padding: 10px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; border: none;
+      cursor: pointer; font-family: var(--sans); transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .75; }
+    .btn-secondary {
+      border: 1px solid var(--border); color: var(--ink2);
+      padding: 10px 24px; border-radius: 8px; font-size: 14px;
+      background: none; cursor: pointer; font-family: var(--sans);
+      text-decoration: none; display: inline-block;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-secondary:hover { border-color: var(--ink3); color: var(--ink); }
+
+    /* Right column — work card deck placeholder */
+    .hero-right {
+      flex: 0 0 330px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .hero-right.in { opacity: 1; transform: translateY(0); }
+    .card-placeholder {
+      height: 272px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 11px; color: var(--ink3);
+      letter-spacing: .06em;
+    }
+
+    /* ── Replay ──────────────────────────────────────────────────── */
+    #replay {
+      position: fixed; bottom: 24px; right: 24px;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--ink3); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 100px;
+      padding: 7px 14px; cursor: pointer;
+      opacity: 0; z-index: 100;
+      transition: opacity 0.4s ease, color 0.15s, border-color 0.15s;
+    }
+    #replay:hover { color: var(--ink); border-color: var(--ink3); }
+    #replay.in { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Full-screen blue intro ────────────────────────────────────── -->
+  <div id="splash-bg"></div>
+
+  <!-- ── "Welcome" word that travels from center to heading ────────── -->
+  <div id="splash-word">Welcome</div>
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────── -->
+  <aside>
+    <div class="s-logo" id="sLogo">KRISTINA</div>
+    <div class="s-tagline" id="sTag">Design &amp; Product Leader</div>
+    <div class="s-divider" id="sDiv"></div>
+    <nav id="sNav">
+      <a class="nav-item active" href="#">Home</a>
+      <a class="nav-item" href="#">About</a>
+      <a class="nav-item" href="#">Work</a>
+      <a class="nav-item" href="#">Experience</a>
+      <a class="nav-item" href="#">Writing</a>
+      <a class="nav-item" href="#">Contact</a>
+    </nav>
+    <div class="s-stats" id="sStats">
+      <div><span class="hi">10+ yrs</span> building things people love</div>
+      <div>5 design systems <span class="lo">created</span></div>
+      <div>8+ products <span class="lo">shipped end-to-end</span></div>
+      <div>3 teams <span class="lo">built &amp; led</span></div>
+      <div>1 AI Lab <span class="lo">led · RAKbank 2025</span></div>
+      <div class="s-avail">
+        <span class="dot-pulse"></span>
+        <span class="hi">available for hire</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ──────────────────────────────────────────────── -->
+  <div class="main">
+    <div class="main-inner">
+      <section class="hero-section">
+        <div class="hero-cols">
+
+          <div class="hero-left">
+            <div class="available-badge" id="badge">
+              <span class="dot-pulse"></span>
+              <span>Available for hire</span>
+            </div>
+
+            <!-- Heading the splash word morphs into -->
+            <h1 class="hero-heading" id="heading"><span id="welcome-word">Welcome</span> to my portfolio, showcasing the work I've been doing since 2015.</h1>
+
+            <div class="intro-p">
+              <span class="p-line" id="pl1">I've helped startups and global brands turn ambitious</span>
+              <span class="p-line" id="pl2">ideas into real-world outcomes.</span>
+              <span class="p-line" id="pl3">&nbsp;</span>
+              <span class="p-line" id="pl4">I lead design from end to end&mdash;shaping vision, driving</span>
+              <span class="p-line" id="pl5">research and strategy, and overseeing execution to ensure</span>
+              <span class="p-line" id="pl6">ideas become impactful, usable products.</span>
+            </div>
+
+            <div class="hero-btns" id="btns">
+              <button class="btn-primary">View my work</button>
+              <a href="mailto:hergottovak@gmail.com" class="btn-secondary">Say hello</a>
+            </div>
+          </div>
+
+          <div class="hero-right" id="heroRight">
+            <div class="card-placeholder">work cards</div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <button id="replay">&#8635; Replay</button>
+
+  <script>
+    const splashBg   = document.getElementById('splash-bg');
+    const splashWord = document.getElementById('splash-word');
+    const headingEl  = document.getElementById('heading');
+
+    // ── Helpers ─────────────────────────────────────────────────────
+    function show(id, delay = 0) {
+      setTimeout(() => document.getElementById(id).classList.add('in'), delay);
+    }
+    function showAll(selector, baseDelay, step) {
+      document.querySelectorAll(selector).forEach((el, i) => {
+        setTimeout(() => el.classList.add('in'), baseDelay + i * step);
+      });
+    }
+
+    // ── Phase 1: blue screen + Welcome fades in (t = 0) ─────────────
+    function phase1() {
+      splashBg.style.transition   = 'none';
+      splashWord.style.transition = 'none';
+      splashWord.style.transform  = 'translate(-50%, -50%) scale(0.88)';
+      splashWord.style.opacity    = '0';
+      splashWord.style.color      = '#ffffff';
+
+      setTimeout(() => {
+        splashWord.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.45s ease';
+        splashWord.style.transform  = 'translate(-50%, -50%) scale(1)';
+        splashWord.style.opacity    = '1';
+      }, 80);
+    }
+
+    // ── Phase 2: blue slides up, Welcome travels to heading (t = 950) ─
+    function phase2() {
+      // Measure where the "Welcome" word inside the heading lives
+      const wRect = document.getElementById('welcome-word').getBoundingClientRect();
+      const sRect = splashWord.getBoundingClientRect();
+
+      // Align splash-word center to welcome-word center
+      const sCX = sRect.left + sRect.width  / 2;
+      const sCY = sRect.top  + sRect.height / 2;
+      const tX  = wRect.left + wRect.width  / 2;
+      const tY  = wRect.top  + wRect.height / 2;
+
+      const dx    = tX - sCX;
+      const dy    = tY - sCY;
+      const scale = wRect.width / sRect.width;
+
+      // Blue bg brightens to white
+      splashBg.style.transition = 'opacity 1.0s ease-in-out';
+      splashBg.style.opacity    = '0';
+
+      // Welcome moves + shrinks, stays white, fades out just before arriving
+      splashWord.style.transition = [
+        'transform 0.9s cubic-bezier(0.76,0,0.24,1)',
+        'opacity   0.25s ease 0.7s',
+      ].join(', ');
+      splashWord.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${scale})`;
+      splashWord.style.opacity   = '0';
+    }
+
+    // ── Phase 3: heading sentence + content appears (t = 1700) ──────
+    function phase3() {
+      splashBg.style.display    = 'none';
+      splashWord.style.display  = 'none';
+
+      // Badge + heading snap in
+      show('badge',   0);
+      show('heading', 80);
+
+      // Paragraph lines stagger
+      ['pl1','pl2','pl3','pl4','pl5','pl6'].forEach((id, i) =>
+        show(id, 300 + i * 170)
+      );
+
+      // Buttons
+      show('btns', 1380);
+
+      // Card deck
+      show('heroRight', 1620);
+
+      // Sidebar: logo → tagline → divider → nav links → stats
+      show('sLogo', 1900);
+      show('sTag',  2020);
+      show('sDiv',  2100);
+      showAll('#sNav .nav-item', 2200, 80);
+      show('sStats', 2800);
+
+      // Replay
+      show('replay', 3400);
+    }
+
+    // ── Full sequence ────────────────────────────────────────────────
+    function run() {
+      phase1();
+      setTimeout(phase2, 950);
+      setTimeout(phase3, 1750);
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────
+    function reset() {
+      splashBg.style.display    = '';
+      splashBg.style.transition = 'none';
+      splashBg.style.opacity    = '1';
+
+      splashWord.style.display    = '';
+      splashWord.style.transition = 'none';
+      splashWord.style.transform  = 'translate(-50%, -50%) scale(0.88)';
+      splashWord.style.opacity    = '0';
+      splashWord.style.color      = '#ffffff';
+
+      const fadeIds = ['badge','heading','btns','heroRight','sLogo','sTag','sDiv','sStats','replay',
+                       'pl1','pl2','pl3','pl4','pl5','pl6'];
+      fadeIds.forEach(id => document.getElementById(id)?.classList.remove('in'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('in'));
+    }
+
+    document.getElementById('replay').addEventListener('click', () => {
+      reset();
+      setTimeout(run, 60);
+    });
+
+    run();
+  </script>
+</body>
+</html>
